@@ -1,7 +1,8 @@
 import torch
 from torch import nn
+from reconstruction import invert_image, reconstruct_image
 import numpy as np
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Union
 
 
 class MLP(nn.Module):
@@ -42,3 +43,19 @@ class ResNet50():
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
+
+
+def compute_dire(image: torch.Tensor) -> torch.Tensor:
+    inverted_image = invert_image(image)
+    reconstructed_image = reconstruct_image(inverted_image)
+    dire = torch.abs(image - reconstructed_image)
+    return dire
+        
+
+def build_classifier(model_name: str, layers: Optional[List], device: str) -> torch.nn.Module:
+    if model_name == 'resnet50':
+        return ResNet50(device)
+    elif model_name == 'mlp':
+        return MLP(device, layers)
+    else:
+        raise ValueError('Invalid model name')
