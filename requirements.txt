@@ -1,4 +1,18 @@
+# local package
+-e .
+
+# external requirements
+black
+
+
+accelerate
+diffusers
+matplotlib
+numpy
+lmdb
+scikit-learn
 torch>=2.0.0
 torchvision
-numpy
+transformers
 tqdm
+xformers
