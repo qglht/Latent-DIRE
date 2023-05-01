@@ -11,13 +11,13 @@ from dire import LatentDIRE
 def train_loop(
     train_dataloader: DataLoader,
     model: nn.Module,
-    DIRE: nn.Module,
+    dire_module: nn.Module,
     loss_fn: nn.Module,
     optimizer: torch.optim.Optimizer,
 ) -> None:
     for idx, (image, label) in tqdm(enumerate(train_dataloader)):
         # Compute prediction error
-        dire, _, _ = DIRE(image)
+        dire, *_ = dire_module(image, steps=50)
         pred = model(dire)
         loss = loss_fn(pred, label)
 
@@ -40,23 +40,26 @@ def train_model(
 
 
 if __name__ == "__main__":
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    generator = torch.Generator().manual_seed(93532)
     # Load the data
     train_loader, test_loader = load_data()
 
     # Build the model
     sample_layers = [3, 64, 64, 2]
     model = build_classifier(device, model_name="mlp", layers=sample_layers)
-    DIRE = LatentDIRE(
-        pretrained_model_name="stabilityai/stable-diffusion-2-1-base",
-        steps=20,
+    dire_module = LatentDIRE(
+        device,
+        pretrained_model_name="CompVis/stable-diffusion-v1-4",
+        generator=generator,
+        use_fp16=False,
     )
 
     # Train the model
     loss_fn = nn.BCELoss()
     # Or Adam, to be discussed
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
-    train_model(train_loader, model, DIRE, loss_fn, optimizer, epochs=10)
+    train_model(train_loader, model, dire_module, loss_fn, optimizer, epochs=10)
 
     # Save the model
     # save_model(model)
