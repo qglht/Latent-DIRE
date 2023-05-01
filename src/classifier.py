@@ -9,21 +9,21 @@ class MLP(nn.Module):
         self,
         device: str,
         layers: List[int],
-        norm_layer: Optional[Callable[..., torch.nn.Module]] = None,
-        activation_layer: Optional[Callable[..., torch.nn.Module]] = torch.nn.ReLU,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        activation_layer: Optional[Callable[..., nn.Module]] = nn.ReLU,
         dropout: Optional[float] = 0.0,
     ) -> None:
         super.__init__()
         self.layers = []
         for layer_i in range(len(layers) - 2):
-            layers.append(torch.nn.Linear(layers[layer_i], layers[layer_i + 1]))
+            layers.append(nn.Linear(layers[layer_i], layers[layer_i + 1]))
             if norm_layer is not None:
                 layers.append(norm_layer(layers[layer_i + 1]))
             layers.append(activation_layer())
-            layers.append(torch.nn.Dropout(dropout))
+            layers.append(nn.Dropout(dropout))
 
-        layers.append(torch.nn.Linear(layers[-2], layers[-1]))
-        layers.append(torch.nn.Dropout(dropout))
+        layers.append(nn.Linear(layers[-2], layers[-1]))
+        layers.append(nn.Dropout(dropout))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.layers(x)
@@ -41,7 +41,7 @@ class ResNet50:
         return self.model(x)
 
 
-def build_classifier(model_name: str, layers: Optional[List], device: str) -> torch.nn.Module:
+def build_classifier(model_name: str, layers: Optional[List], device: str) -> nn.Module:
     if model_name == "resnet50":
         return ResNet50(device)
     elif model_name == "mlp":
