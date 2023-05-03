@@ -1,5 +1,6 @@
 # local package
 -e .
+src/guided-diffusion
 
 # external requirements
 black
