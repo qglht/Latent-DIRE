@@ -1,0 +1,1 @@
+wget --output-document /models/lsun_bedroom.pt https://openaipublic.blob.core.windows.net/diffusion/jul-2021/lsun_bedroom.pt
