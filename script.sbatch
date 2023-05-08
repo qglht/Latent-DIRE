@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --gpus=a100-pcie-40gb
+#SBATCH --gpus=a100-pcie-40gb:1
 #SBATCH --time 10:00:00
 #SBATCH --ntasks=4
 #SBATCH --mem-per-cpu=4G
