@@ -20,7 +20,7 @@ mapping_id_caption = {}
 mat_contents = sio.loadmat('src/meta.mat')
 for i in range(mat_contents['synsets'].shape[0]):
     pdb.set_trace()
-    mapping_id_caption[mat_contents['synsets'][i][0][0]]=mat_contents['synsets'][i][2][0]
+    mapping_id_caption[mat_contents['synsets'][i][0][0][0][0]] = mat_contents['synsets'][i][0][2][0]
 
 ## create mapping from ILSVRC2012_val to ILSVRC2012_synset
 
