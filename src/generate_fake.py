@@ -4,7 +4,7 @@ import os
 ## create mapping from ILSVRC2012_val ILSVRC2012_id 
 
 
-filenames = os.listdir('data/train/')
+filenames = os.listdir('data/images/')
 mapping_val_id = {filename:None for filename in filenames}
 with open('src/ILSVRC2012_validation_ground_truth.txt') as f:
     for i, line in enumerate(f):
