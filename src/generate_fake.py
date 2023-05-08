@@ -10,8 +10,7 @@ mapping_val_id = {filename:None for filename in filenames}
 pdb.set_trace()
 with open('src/ILSVRC2012_validation_ground_truth.txt') as f:
     for i, line in enumerate(f):
-        pdb.set_trace()
-        mapping_val_id[filenames[i]] = line.strip()
+        mapping_val_id[filenames[i]] = int(line.strip())
 
 ## create mapping from ILSVRC2012_id to ILSVRC2012_synset
 
