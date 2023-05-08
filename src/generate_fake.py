@@ -1,6 +1,7 @@
 from diffusers import StableDiffusionPipeline
+import pdb
 
-batch_size = 50
+batch_size = 1
 
 # read file src/LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
 
@@ -16,6 +17,8 @@ prompts = mapping_caption_wordnet.values()
 
 # generate fake images from these prompts
 
+images_fake = []
 pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4") # or other model
-for prompt in prompts:
-    pipe([prompt] * batch_size)
+for prompt in prompts[:1]:
+    images_fake = images_fake + pipe([prompt] * batch_size).images
+images_fake[0].save('fake.jpg')
