@@ -5,7 +5,7 @@ import pdb
 ## create mapping from ILSVRC2012_val ILSVRC2012_id 
 
 
-filenames = os.listdir('data/images/')
+filenames = os.listdir('data/images/ILSVRC2012_img_val/')
 mapping_val_id = {filename:None for filename in filenames}
 pdb.set_trace()
 with open('src/ILSVRC2012_validation_ground_truth.txt') as f:
