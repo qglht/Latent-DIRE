@@ -7,5 +7,5 @@
 #SBATCH --mem-per-cpu=4G
 #SBATCH --job-name=job-name
 
-module load eth_proxy
+module load gcc/8.2.0 python_gpu/3.10.4 r/4.0.2 git-lfs/2.3.0 eth_proxy npm/6.14.9
 python src/generate_fake.py
