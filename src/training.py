@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 import wandb
 
+from torchvision.transforms.functional import hflip
+
 from data import load_data
 from models.cnn import build_cnn
 from models.mlp import build_mlp
@@ -29,7 +31,9 @@ def train_model(
             dire = dire.to(device)
             label: torch.Tensor = label.to(device)
 
-            # Compute prediction error
+            # Compute prediction error, 50% chance for horizontal flip
+            if np.random.rand() < 0.5:
+                dire = hflip(dire)
             pred: torch.Tensor = model(dire)
             loss = loss_fn(pred, label)
 
