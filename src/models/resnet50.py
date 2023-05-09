@@ -22,12 +22,14 @@ def build_resnet50_pixel(pretrained: str = True) -> ResNet:
 def preprocess_resnet50_pixel(img):
     weights = ResNet50_Weights.DEFAULT
     img = PILToTensor()(img)
-    batch = weights.transforms()(img).unsqueeze(0)
+    batch = weights.transforms()(img)
     return batch
 
-def build_resnet50_latent(device: str='cpu', pretrained: str=True) -> ResNet:
+
+def build_resnet50_latent(device: str = 'cpu', pretrained: str = True) -> ResNet:
     # FIXME
     pass
+
 
 def preprocess_resnet50_latent(img):
     # FIXME

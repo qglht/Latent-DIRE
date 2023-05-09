@@ -10,7 +10,7 @@ import wandb
 
 from torchvision.transforms.functional import hflip
 
-from data import load_data
+from data_loader import get_dataloader
 from models.cnn import build_cnn
 from models.mlp import build_mlp
 from models.resnet50 import (build_resnet50_latent, build_resnet50_pixel,
@@ -64,6 +64,9 @@ if __name__ == "__main__":
                         help="Whether to use Latent DIRE")
     parser.add_argument("--optimizer", type=str,
                         default="sgd", help="Optimizer to use")
+    parser.add_argument("--train_dir", type=str, default="data/train")
+    parser.add_argument("--val_dir", type=str, default="data/val")
+    parser.add_argument("--test_dir", type=str, default="data/test")
     args = parser.parse_args()
 
     # Check arguments
@@ -84,7 +87,9 @@ if __name__ == "__main__":
     generator = torch.Generator().manual_seed(0)
 
     # Load the data
-    train_loader, test_loader = load_data()
+    train_loader = get_dataloader(args.train_dir, args.batch_size, shuffle=True)
+    test_loader = get_dataloader(args.test_dir, args.batch_size, shuffle=False)
+    val_loader = get_dataloader(args.val_dir, args.batch_size, shuffle=False)
 
     # Build the model
     model_dict = {
