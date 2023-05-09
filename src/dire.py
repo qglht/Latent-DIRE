@@ -27,6 +27,7 @@ class LatentDIRE(nn.Module):
         pretrained_model_name: str = "runwayml/stable-diffusion-v1-5",
         generator: torch.Generator = torch.Generator().manual_seed(1),
         use_fp16: bool = True,
+        n_steps: int = 20
     ) -> None:
         super().__init__()
         self.device = device
@@ -40,8 +41,6 @@ class LatentDIRE(nn.Module):
             # "stabilityai/stable-diffusion-2-1", TODO: enable prediction_type=v_predict in _ddim_inversion
         ], f"Model {pretrained_model_name} not supported. Must be one of 'CompVis/stable-diffusion-v1-4', 'runwayml/stable-diffusion-v1-5'"  # , 'stabilityai/stable-diffusion-2-1'"
         self.scheduler = DDIMScheduler.from_pretrained(
-            pretrained_model_name, subfolder="scheduler")
-        self.inversion_scheduler = DDIMInverseScheduler.from_pretrained(
             pretrained_model_name, subfolder="scheduler")
         self.pipe = StableDiffusionPipeline.from_pretrained(
             pretrained_model_name,
