@@ -281,7 +281,9 @@ class ADMDIRE(nn.Module):
             if return_all:
                 xs.append(x.cpu())
 
-        return x, xs if return_all else x
+        if return_all:
+            return x, xs
+        return x
 
     @torch.no_grad()
     def _reconstruct(
@@ -307,7 +309,9 @@ class ADMDIRE(nn.Module):
             if return_all:
                 xs.append(x.cpu())
 
-        return x, xs if return_all else x
+        if return_all:
+            return x, xs
+        return x
 
     @staticmethod
     def img_to_tensor(
