@@ -24,10 +24,9 @@ class LatentDIRE(nn.Module):
     def __init__(
         self,
         device: torch.device,
-        pretrained_model_name: str = "CompVis/stable-diffusion-v1-4",
-        generator: torch.Generator = torch.Generator().manual_seed(63057),
-        use_fp16: bool = False,
-        n_steps: int = 20,
+        pretrained_model_name: str = "runwayml/stable-diffusion-v1-5",
+        generator: torch.Generator = torch.Generator().manual_seed(1),
+        use_fp16: bool = True,
     ) -> None:
         super().__init__()
         self.device = device
@@ -40,9 +39,10 @@ class LatentDIRE(nn.Module):
             "runwayml/stable-diffusion-v1-5",
             # "stabilityai/stable-diffusion-2-1", TODO: enable prediction_type=v_predict in _ddim_inversion
         ], f"Model {pretrained_model_name} not supported. Must be one of 'CompVis/stable-diffusion-v1-4', 'runwayml/stable-diffusion-v1-5'"  # , 'stabilityai/stable-diffusion-2-1'"
-        self.scheduler = DDIMScheduler.from_config(
-            pretrained_model_name, subfolder="scheduler"
-        )
+        self.scheduler = DDIMScheduler.from_pretrained(
+            pretrained_model_name, subfolder="scheduler")
+        self.inversion_scheduler = DDIMInverseScheduler.from_pretrained(
+            pretrained_model_name, subfolder="scheduler")
         self.pipe = StableDiffusionPipeline.from_pretrained(
             pretrained_model_name,
             safety_checker=None,
@@ -70,7 +70,8 @@ class LatentDIRE(nn.Module):
         latent = self.encode(x)
         noise = self._ddim_inversion(latent, n_steps)
         batch_size = noise.shape[0]
-        noise = noise.to(dtype=torch.float16 if self.use_fp16 else torch.float32)
+        noise = noise.to(
+            dtype=torch.float16 if self.use_fp16 else torch.float32)
         latent_reconstruction = self.pipe(
             prompt=[""] * batch_size,
             latents=noise,
@@ -106,22 +107,20 @@ class LatentDIRE(nn.Module):
         for i in tqdm(range(len(reverse_timestep_list) - 1), desc="inversion"):
             timestep = reverse_timestep_list[i]
             next_timestep = reverse_timestep_list[i + 1]
-            latent_model_input = self.scheduler.scale_model_input(latent, timestep)
+            latent_model_input = self.scheduler.scale_model_input(
+                latent, timestep)
             with autocast() if self.use_fp16 else nullcontext():
                 noise_pred = self.pipe.unet(
-                    latent_model_input, timestep, encoder_hidden_state
-                ).sample
+                    latent_model_input, timestep, encoder_hidden_state).sample
 
             alpha_prod_t = self.scheduler.alphas_cumprod[timestep]
             alpha_prod_t_next = self.scheduler.alphas_cumprod[next_timestep]
             beta_prod_t = 1 - alpha_prod_t
             beta_prod_t_next = 1 - alpha_prod_t_next
 
-            pred_x0 = (latent - beta_prod_t**0.5 * noise_pred) / (alpha_prod_t**0.5)
-            latent = (
-                alpha_prod_t_next**0.5 * pred_x0
-                + beta_prod_t_next**0.5 * noise_pred
-            )
+            pred_x0 = (latent - beta_prod_t**0.5 *
+                       noise_pred) / (alpha_prod_t**0.5)
+            latent = alpha_prod_t_next**0.5 * pred_x0 + beta_prod_t_next**0.5 * noise_pred
 
         return latent
 
@@ -129,9 +128,8 @@ class LatentDIRE(nn.Module):
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         with autocast() if self.use_fp16 else nullcontext():
             # fh: TODO: Use mean instead of sample?
-            latent = self.pipe.vae.encode(x).latent_dist.sample(
-                generator=self.generator
-            )
+            latent = self.pipe.vae.encode(
+                x).latent_dist.sample(generator=self.generator)
         latent *= self.pipe.vae.config.scaling_factor
 
         return latent
@@ -177,7 +175,8 @@ class LatentDIRE(nn.Module):
         image = (image * 255).round().astype("uint8")
         if image.shape[-1] == 1:
             # special case for grayscale (single channel) image
-            pil_image = [Image.fromarray(image.squeeze(), mode="L") for image in image]
+            pil_image = [Image.fromarray(
+                image.squeeze(), mode="L") for image in image]
         else:
             pil_image = [Image.fromarray(image) for image in image]
 
