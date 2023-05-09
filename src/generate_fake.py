@@ -19,7 +19,9 @@ print("prompts loaded")
 
 # generate fake images from these prompts
 
+device = "cuda"
 pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5") # or other model
+pipe = pipe.to(device)
 print("pipeline created")
 for prompt in prompts:
     print(f"writing the images for the prompt : {prompt}")
