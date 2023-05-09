@@ -17,7 +17,7 @@ def main(args, device: torch.device):
     '''Open images from read_dir, compute DIRE, and save to write_dir.
     The number of images loaded in at a time is determined by batch_size.
     '''
-    model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=False)
+    model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=(True if device=='cuda' else False))
     for root, dirs, files in os.walk(args.read_dir):
         file_position = 0
         if not os.path.exists(args.write_dir_dire):
@@ -45,6 +45,7 @@ def main(args, device: torch.device):
             # log progress
             if file_position % 100 == 0:
                 logging.info(f'Processed {file_position} images')
+                print(f'Processed {file_position} images')
 
             # Edge case: last batch
             if len(files) - file_position < args.batch_size:
