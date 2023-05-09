@@ -2,7 +2,7 @@
 
 #SBATCH --gpus=1
 #SBATCH --gres=gpumem:32g
-#SBATCH --time 00:05:00
+#SBATCH --time 05:00:00
 #SBATCH --ntasks=4
 #SBATCH --mem-per-cpu=4G
 #SBATCH --job-name=job-name
