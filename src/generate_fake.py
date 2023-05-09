@@ -15,11 +15,14 @@ with open('src/LOC_synset_mapping.txt') as f:
 # get all possible prompts and save them in a list
 
 prompts = list(mapping_caption_wordnet.values())
+print("prompts loaded")
 
 # generate fake images from these prompts
 
 pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5") # or other model
+print("pipeline created")
 for prompt in prompts:
+    print(f"writing the images for the prompt : {prompt}")
     if not os.path.exists(f"data/train/{prompt}/"):
         os.makedirs(f"data/train/{prompt}/")
     for batch in range(batches):
