@@ -3,12 +3,12 @@ To be run in src folder.
 '''
 
 
-import os
-import sys
 from argparse import ArgumentParser
 import logging
+import os
 
 import torch
+import wandb
 
 from dire import LatentDIRE
 
@@ -17,6 +17,8 @@ def main(args, device: torch.device):
     '''Open images from read_dir, compute DIRE, and save to write_dir.
     The number of images loaded in at a time is determined by batch_size.
     '''
+    wandb.init(project="compute-dire", entity="latent-dire")
+    
     print('Loading model...')
     model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=(True if device=='cuda' else False))
     print('Model loaded.')
