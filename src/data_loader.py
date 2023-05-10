@@ -1,11 +1,7 @@
-from typing import Tuple
-
-import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 
-from models.resnet50 import preprocess_resnet50_pixel
+from nn.resnet50 import preprocess_resnet50_pixel
 
 
 def get_dataset(root):
