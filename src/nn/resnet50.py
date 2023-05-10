@@ -1,6 +1,6 @@
 from torch import nn
 from torchvision.models import resnet50, ResNet50_Weights, ResNet
-from torchvision.transforms import PILToTensor
+from torchvision.transforms.functional import pil_to_tensor
 
 
 def build_resnet50_pixel(pretrained: str = True) -> ResNet:
@@ -16,7 +16,7 @@ def build_resnet50_pixel(pretrained: str = True) -> ResNet:
 
 def preprocess_resnet50_pixel(img):
     weights = ResNet50_Weights.DEFAULT
-    img = PILToTensor()(img)
+    img = pil_to_tensor(img)
     batch = weights.transforms()(img)
     return batch
 
