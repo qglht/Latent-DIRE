@@ -2,7 +2,7 @@
 
 #SBATCH --gpus=1
 #SBATCH --time 01:00:00
-#SBATCH --ntasks_per_node=4
+#SBATCH --ntasks-per-node=4
 #SBATCH --mem-per-cpu=4G
 #SBATCH --job-name=train_dev
 
