@@ -58,20 +58,20 @@ class Classifier(pl.LightningModule):
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = Adam if self.hparams.optimizer == "Adam" else SGD
         if self.hparams.model == "resnet50_pixel":
-            optimizer = optimizer(self.classifier.fc.parameters(), lr=self.hparams.lr)
+            optimizer = optimizer(self.classifier.fc.parameters(), lr=self.hparams.learning_rate)
         else:
-            optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.lr)
+            optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.learning_rate)
 
         lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=2)
 
-        return [optimizer], [lr_scheduler]
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "val_acc"}
 
 
 def main(args: argparse.Namespace) -> None:
     seed_everything(33914, workers=True)
 
     # Setup Weights & Biases
-    wandb_logger = WandbLogger(project="classification", entity="latent-dire", config=vars(args))
+    wandb_logger = WandbLogger(project="Training", entity="latent-dire", config=vars(args))
 
     # Load the data
     train_loader, val_loader, test_loader = get_dataloaders(args.data_dir, args.batch_size, shuffle=True)
