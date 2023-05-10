@@ -28,7 +28,7 @@ class LatentDIRE(nn.Module):
         pretrained_model_name: str = "runwayml/stable-diffusion-v1-5",
         generator: torch.Generator = torch.Generator().manual_seed(1),
         use_fp16: bool = True,
-        n_steps: int = 20
+        n_steps: int = 20,
     ) -> None:
         super().__init__()
         self.device = device
@@ -41,8 +41,7 @@ class LatentDIRE(nn.Module):
             "runwayml/stable-diffusion-v1-5",
             # "stabilityai/stable-diffusion-2-1", TODO: enable prediction_type=v_predict in _ddim_inversion
         ], f"Model {pretrained_model_name} not supported. Must be one of 'CompVis/stable-diffusion-v1-4', 'runwayml/stable-diffusion-v1-5'"  # , 'stabilityai/stable-diffusion-2-1'"
-        self.scheduler = DDIMScheduler.from_pretrained(
-            pretrained_model_name, subfolder="scheduler")
+        self.scheduler = DDIMScheduler.from_pretrained(pretrained_model_name, subfolder="scheduler")
         self.pipe = StableDiffusionPipeline.from_pretrained(
             pretrained_model_name,
             safety_checker=None,
@@ -70,8 +69,7 @@ class LatentDIRE(nn.Module):
         latent = self.encode(x)
         noise = self._ddim_inversion(latent, n_steps)
         batch_size = noise.shape[0]
-        noise = noise.to(
-            dtype=torch.float16 if self.use_fp16 else torch.float32)
+        noise = noise.to(dtype=torch.float16 if self.use_fp16 else torch.float32)
         latent_reconstruction = self.pipe(
             prompt=[""] * batch_size,
             latents=noise,
@@ -85,9 +83,7 @@ class LatentDIRE(nn.Module):
 
         return dire, latent_dire, reconstruction, latent_reconstruction, latent
 
-    def _ddim_inversion(
-        self, latent: torch.Tensor, n_steps: int = None
-    ) -> torch.Tensor:
+    def _ddim_inversion(self, latent: torch.Tensor, n_steps: int = None) -> torch.Tensor:
         """
         adapted from
         https://github.com/tejank10/null-text-inversion/blob/main/notebook.ipynb
@@ -107,19 +103,16 @@ class LatentDIRE(nn.Module):
         for i in tqdm(range(len(reverse_timestep_list) - 1), desc="inversion"):
             timestep = reverse_timestep_list[i]
             next_timestep = reverse_timestep_list[i + 1]
-            latent_model_input = self.scheduler.scale_model_input(
-                latent, timestep)
+            latent_model_input = self.scheduler.scale_model_input(latent, timestep)
             with autocast() if self.use_fp16 else nullcontext():
-                noise_pred = self.pipe.unet(
-                    latent_model_input, timestep, encoder_hidden_state).sample
+                noise_pred = self.pipe.unet(latent_model_input, timestep, encoder_hidden_state).sample
 
             alpha_prod_t = self.scheduler.alphas_cumprod[timestep]
             alpha_prod_t_next = self.scheduler.alphas_cumprod[next_timestep]
             beta_prod_t = 1 - alpha_prod_t
             beta_prod_t_next = 1 - alpha_prod_t_next
 
-            pred_x0 = (latent - beta_prod_t**0.5 *
-                       noise_pred) / (alpha_prod_t**0.5)
+            pred_x0 = (latent - beta_prod_t**0.5 * noise_pred) / (alpha_prod_t**0.5)
             latent = alpha_prod_t_next**0.5 * pred_x0 + beta_prod_t_next**0.5 * noise_pred
 
         return latent
@@ -128,8 +121,7 @@ class LatentDIRE(nn.Module):
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         with autocast() if self.use_fp16 else nullcontext():
             # fh: TODO: Use mean instead of sample?
-            latent = self.pipe.vae.encode(
-                x).latent_dist.sample(generator=self.generator)
+            latent = self.pipe.vae.encode(x).latent_dist.sample(generator=self.generator)
         latent *= self.pipe.vae.config.scaling_factor
 
         return latent
@@ -143,15 +135,12 @@ class LatentDIRE(nn.Module):
         latent /= self.pipe.vae.config.scaling_factor
         with autocast() if self.use_fp16 else nullcontext():
             image = self.pipe.vae.decode(latent).sample
-        image = (image / 2 + 0.5).clamp(0, 1)
         image = image.float()
 
         return image
 
     @staticmethod
-    def img_to_tensor(
-        image: Union[str, Image.Image], size: int, use_fp16: bool = False
-    ) -> torch.Tensor:
+    def img_to_tensor(image: Union[str, Image.Image], size: int, use_fp16: bool = False) -> torch.Tensor:
         if type(image) == str:
             image = Image.open(image)
         image = image.resize((size, size))
@@ -169,14 +158,15 @@ class LatentDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
-        image = image.cpu().permute(0, 2, 3, 1).float().numpy()
-        if image.ndim == 3:
-            image = image[None, ...]
-        image = (image * 255).round().astype("uint8")
+        if image.dim == 3:
+            image = image.unsqueeze(0)
+
+        image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
+        image = image.cpu().permute(0, 2, 3, 1).numpy()
+
         if image.shape[-1] == 1:
             # special case for grayscale (single channel) image
-            pil_image = [Image.fromarray(
-                image.squeeze(), mode="L") for image in image]
+            pil_image = [Image.fromarray(image.squeeze(), mode="L") for image in image]
         else:
             pil_image = [Image.fromarray(image) for image in image]
 
@@ -243,9 +233,7 @@ class ADMDIRE(nn.Module):
         return dire, reconstruction
 
     @torch.no_grad()
-    def _invert(
-        self, x: torch.Tensor, n_steps: int = None, return_all: bool = False
-    ) -> torch.Tensor:
+    def _invert(self, x: torch.Tensor, n_steps: int = None, return_all: bool = False) -> torch.Tensor:
         """from https://github.com/tejank10/null-text-inversion/blob/main/notebook.ipynb"""
         if n_steps is None:
             n_steps = self.n_steps
@@ -273,10 +261,7 @@ class ADMDIRE(nn.Module):
 
             pred_x0 = (x - beta_prod_t**0.5 * noise_pred) / (alpha_prod_t**0.5)
             # compute the previous noisy sample x_t -> x_t+1
-            x = (
-                alpha_prod_t_next**0.5 * pred_x0
-                + beta_prod_t_next**0.5 * noise_pred
-            )
+            x = alpha_prod_t_next**0.5 * pred_x0 + beta_prod_t_next**0.5 * noise_pred
             if return_all:
                 xs.append(x.cpu())
 
@@ -285,9 +270,7 @@ class ADMDIRE(nn.Module):
         return x
 
     @torch.no_grad()
-    def _reconstruct(
-        self, x: torch.Tensor, n_steps: int = None, return_all: bool = False
-    ) -> torch.Tensor:
+    def _reconstruct(self, x: torch.Tensor, n_steps: int = None, return_all: bool = False) -> torch.Tensor:
         if n_steps is None:
             n_steps = self.n_steps
         self.scheduler.set_timesteps(n_steps)
@@ -313,9 +296,7 @@ class ADMDIRE(nn.Module):
         return x
 
     @staticmethod
-    def img_to_tensor(
-        image: Union[str, Image.Image], size: int, use_fp16: bool = False
-    ) -> torch.Tensor:
+    def img_to_tensor(image: Union[str, Image.Image], size: int, use_fp16: bool = False) -> torch.Tensor:
         if type(image) == str:
             image = Image.open(image)
         image = image.resize((size, size))
@@ -333,12 +314,10 @@ class ADMDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
-        if image.dim == 3:
+        if image.dim() == 3:
             image = image.unsqueeze(0)
 
-        image = (
-            ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)
-        )  # [-1, 1] to [0, 255]
+        image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
         image = image.cpu().permute(0, 2, 3, 1).numpy()
 
         if image.shape[-1] == 1:
