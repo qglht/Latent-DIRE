@@ -108,9 +108,7 @@ if __name__ == "__main__":
     parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
     parser.add_argument("--learning_rate", type=float, default=0.001)
-    parser.add_argument("--train_dir", type=str, default="/train")
-    parser.add_argument("--val_dir", type=str, default="/val")
-    parser.add_argument("--test_dir", type=str, default="/test")
+    parser.add_argument("--data_dir", type=str, default="data/data")
     args = parser.parse_args()
 
     # Check arguments

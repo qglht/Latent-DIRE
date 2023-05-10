@@ -7,5 +7,5 @@
 #SBATCH --job-name=train_dev
 
 module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
-python src/training.py --train_dir "data/dev_train" --val_dir "data/dev_val" --test_dir "data/dev_test" --batch_size 10                                                                   
+python src/training.py --data_dir "data/data_dev" --batch_size 10                                                                   
 ~                                                                                                                                                             
