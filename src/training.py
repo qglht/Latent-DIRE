@@ -79,9 +79,9 @@ def main(args: argparse.Namespace) -> None:
     wandb_logger = WandbLogger(project="latent-dire", entity="latent-dire", config=vars(args))
 
     # Load the data
-    # train_loader = get_dataloader(args.train_dir, args.batch_size, shuffle=True)
-    # val_loader = get_dataloader(args.val_dir, args.batch_size, shuffle=False)
-    # test_loader = get_dataloader(args.test_dir, args.batch_size, shuffle=False)
+    train_loader = get_dataloader(args.train_dir, args.batch_size, shuffle=True)
+    val_loader = get_dataloader(args.val_dir, args.batch_size, shuffle=False)
+    test_loader = get_dataloader(args.test_dir, args.batch_size, shuffle=False)
 
     # Setup callbacks
     early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
@@ -90,7 +90,7 @@ def main(args: argparse.Namespace) -> None:
 
     clf = Classifier(args.model, args.optimizer, args.learning_rate)
     trainer = Trainer(
-        fast_dev_run=True,  # uncomment to debug
+        fast_dev_run=args.dev_run,  # uncomment to debug
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         devices="auto",  # use all available GPUs
         min_epochs=1,
@@ -101,12 +101,13 @@ def main(args: argparse.Namespace) -> None:
         default_root_dir="models/",
         logger=wandb_logger,
     )
-    # trainer.fit(clf, train_loader, val_loader)
-    # trainer.test(clf, test_loader)
+    trainer.fit(clf, train_loader, val_loader)
+    trainer.test(clf, test_loader)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dev_run", action="store_true", help="Whether to run a test run.")
     parser.add_argument("--model", type=str, default="resnet50_pixel")
     parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     parser.add_argument("--batch_size", type=int, default=16)
