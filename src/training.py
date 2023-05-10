@@ -2,15 +2,16 @@ import argparse
 from typing import Tuple
 
 import numpy as np
-from sklearn.metrics import accuracy_score, average_precision_score
+from torchmetrics.functional.classification import binary_accuracy
+from torchmetrics.functional import binary_average_precision
 
 import torch
-import torch.functional as F
+import torch.nn as nn
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchvision.transforms.functional import hflip
 import lightning.pytorch as pl
-from lightning.pytorch.callbacks import TQDMProgressBar, EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import WandbLogger
 
@@ -23,37 +24,38 @@ class Classifier(pl.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.classifier = MODEL_DICT[model]()
+        self.loss = nn.CrossEntropyLoss()
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
         dire, label = batch
         if np.random.rand() < 0.5:  # 50% chance for horizontal flip
             dire = hflip(dire)
-        pred: torch.Tensor = self.classifier(dire)
-        loss = F.binary_cross_entropy(pred, label)
-        acc = accuracy_score(label, pred.argmax(axis=1))
-        ap = average_precision_score(label, pred[:, 1])
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
         metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
-        self.log(metrics)
+        self.log_dict(metrics)
 
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred: torch.Tensor = self.classifier(dire)
-        loss = F.binary_cross_entropy(pred, label)
-        acc = accuracy_score(label, pred.argmax(axis=1))
-        ap = average_precision_score(label, pred[:, 1])
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
         metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
-        self.log(metrics)
+        self.log_dict(metrics)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred: torch.Tensor = self.classifier(dire)
-        loss = F.binary_cross_entropy(pred, label)
-        acc = accuracy_score(label, pred.argmax(axis=1))
-        ap = average_precision_score(label, pred[:, 1])
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
         metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
-        self.log(metrics)
+        self.log_dict(metrics)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = Adam if self.hparams.optimizer == "Adam" else SGD
