@@ -3,10 +3,11 @@ import os
 import wandb
 import pickle
 
-wandb.init(project="generate", entity="latent-dire", name="generate_fake")
-
-batch_size = 12
-batches = 4 
+config = {
+    "batch_size": 5,
+    "batches": 10,
+}
+wandb.init(project="generate", entity="latent-dire", name="generate_fake", config=config)
 
 # read file src/LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
 
@@ -14,7 +15,7 @@ mapping_caption_wordnet = {}
 with open("src/LOC_synset_mapping.txt") as f:
     for line in f:
         line = line.strip().split()
-        caption = ' '.join(line[1:])
+        caption = " ".join(line[1:])
         mapping_caption_wordnet[line[0]] = caption
 
 # get all possible prompts and save them in a list
@@ -37,8 +38,8 @@ for prompt in prompts:
     print(f"writing the images for the prompt : {prompt}")
     if not os.path.exists(f"data/fake/{prompt}/"):
         os.makedirs(f"data/fake/{prompt}/")
-    for batch in range(batches):
-        images_generated = pipe([prompt] * batch_size).images
-        for i in range(batch_size):
+    for batch in range(config["batches"]):
+        images_generated = pipe([prompt] * config["batch_size"]).images
+        for i in range(config["batch_size"]):
             image = images_generated[i]
-            image.save(f"data/fake/{prompt}/fake_{batch*batch_size+i}.jpg")
+            image.save(f"data/fake/{prompt}/fake_{batch*config['batch_size']+i}.jpg")
