@@ -14,7 +14,7 @@ from lightning.pytorch.callbacks import TQDMProgressBar, EarlyStopping, ModelChe
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import WandbLogger
 
-from data_loader import get_dataloader
+from data_loader import get_dataloaders
 from nn.model_collection import MODEL_DICT
 
 
@@ -62,12 +62,7 @@ class Classifier(pl.LightningModule):
         else:
             optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.lr)
 
-        lr_scheduler = ReduceLROnPlateau(
-            optimizer,
-            mode="max",
-            factor=0.1,
-            patience=2,
-        )
+        lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=2)
 
         return [optimizer], [lr_scheduler]
 
@@ -76,12 +71,10 @@ def main(args: argparse.Namespace) -> None:
     seed_everything(33914, workers=True)
 
     # Setup Weights & Biases
-    wandb_logger = WandbLogger(project="latent-dire", entity="latent-dire", config=vars(args))
+    wandb_logger = WandbLogger(project="classification", entity="latent-dire", config=vars(args))
 
     # Load the data
-    train_loader = get_dataloader(args.train_dir, args.batch_size, shuffle=True)
-    val_loader = get_dataloader(args.val_dir, args.batch_size, shuffle=False)
-    test_loader = get_dataloader(args.test_dir, args.batch_size, shuffle=False)
+    train_loader, val_loader, test_loader = get_dataloaders(args.data_dir, args.batch_size, shuffle=True)
 
     # Setup callbacks
     early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
