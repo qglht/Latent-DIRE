@@ -1,11 +1,12 @@
 from diffusers import StableDiffusionPipeline
 import os
 import wandb
+import pickle
 
 wandb.init(project="generate", entity="latent-dire", name="generate_fake")
 
-batch_size = 5
-batches = 10
+batch_size = 10
+batches = 5
 
 # read file src/LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
 
@@ -18,6 +19,11 @@ with open("src/LOC_synset_mapping.txt") as f:
 # get all possible prompts and save them in a list
 
 prompts = list(mapping_caption_wordnet.values())
+
+path = "/cluster/home/qguilhot/Latent-DIRE/data/train/"
+directories = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
+
+new_prompts = [prompt for prompt in prompts if prompt not in directories]
 print("prompts loaded")
 
 # generate fake images from these prompts
