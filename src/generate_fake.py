@@ -21,7 +21,7 @@ with open("src/LOC_synset_mapping.txt") as f:
 
 prompts = list(mapping_caption_wordnet.values())
 
-path = "/cluster/home/qguilhot/Latent-DIRE/data/train/"
+path = "/cluster/home/qguilhot/Latent-DIRE/data/fake/"
 directories = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
 
 prompts = [prompt for prompt in prompts if prompt not in directories]
@@ -35,10 +35,10 @@ pipe = pipe.to(device)
 print("pipeline created")
 for prompt in prompts:
     print(f"writing the images for the prompt : {prompt}")
-    if not os.path.exists(f"data/train/{prompt}/"):
-        os.makedirs(f"data/train/{prompt}/")
+    if not os.path.exists(f"data/fake/{prompt}/"):
+        os.makedirs(f"data/fake/{prompt}/")
     for batch in range(batches):
         images_generated = pipe([prompt] * batch_size).images
         for i in range(batch_size):
             image = images_generated[i]
-            image.save(f"data/train/{prompt}/fake_{batch*batch_size+i}.jpg")
+            image.save(f"data/fake/{prompt}/fake_{batch*batch_size+i}.jpg")
