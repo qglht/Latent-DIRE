@@ -9,7 +9,8 @@ import torch.nn as nn
 from torchvision.transforms.functional import pil_to_tensor
 from tqdm.auto import tqdm
 
-from src.config import get_ADM_config
+# from src.config import get_ADM_config # Issue with relative imports
+from config import get_ADM_config
 from guided_diffusion.dist_util import load_state_dict
 from guided_diffusion.script_util import create_model_and_diffusion
 
@@ -134,7 +135,6 @@ class LatentDIRE(nn.Module):
         latent /= self.pipe.vae.config.scaling_factor
         with autocast() if self.use_fp16 else nullcontext():
             image = self.pipe.vae.decode(latent).sample
-        image = (image / 2 + 0.5).clamp(0, 1)
         image = image.float()
 
         return image
@@ -158,10 +158,12 @@ class LatentDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
-        image = image.cpu().permute(0, 2, 3, 1).float().numpy()
-        if image.ndim == 3:
-            image = image[None, ...]
-        image = (image * 255).round().astype("uint8")
+        if image.dim == 3:
+            image = image.unsqueeze(0)
+
+        image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
+        image = image.cpu().permute(0, 2, 3, 1).numpy()
+
         if image.shape[-1] == 1:
             # special case for grayscale (single channel) image
             pil_image = [Image.fromarray(image.squeeze(), mode="L") for image in image]
@@ -312,7 +314,7 @@ class ADMDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
-        if image.dim == 3:
+        if image.dim() == 3:
             image = image.unsqueeze(0)
 
         image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
