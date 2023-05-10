@@ -2,13 +2,12 @@ import argparse
 from typing import Tuple
 
 import numpy as np
-from torchmetrics.functional.classification import binary_accuracy
-from torchmetrics.functional import binary_average_precision
 
 import torch
 import torch.nn as nn
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics.functional.classification import binary_accuracy, binary_average_precision
 from torchvision.transforms.functional import hflip
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
