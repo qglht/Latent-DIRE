@@ -27,7 +27,7 @@ def main(args, device: torch.device):
         while True:
             # load batch of images
             batch = torch.cat([model.img_to_tensor(
-                img) for img in [os.path.join(args.read_dir, file) for file in files[file_position:file_position+args.batch_size]]])
+                img, 512) for img in [os.path.join(args.read_dir, file) for file in files[file_position:file_position+args.batch_size]]])
             # compute DIRE and latent DIRE
             with torch.no_grad():
                 dire, latent_dire, _, _, _ = model(
