@@ -95,3 +95,4 @@ target/
 .xml
 reconnect_info
 models
+wandb
