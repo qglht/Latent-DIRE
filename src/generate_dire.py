@@ -37,7 +37,7 @@ def main(args, device: torch.device):
             print('Computing DIRE...')
             with torch.no_grad():
                 dire, latent_dire, _, _, _ = model(
-                    batch.to(device), n_steps=50)
+                    batch.to(device), n_steps=20)
 
             # save tensors
             print('Saving tensors...')
@@ -60,7 +60,7 @@ def main(args, device: torch.device):
                     img, 512) for img in [os.path.join(args.read_dir, file) for file in files[file_position:]]])
                 with torch.no_grad():
                     dire, latent_dire, _, _, _ = model(
-                        batch.to(device), n_steps=50)
+                        batch.to(device), n_steps=20)
 
                     # For testing locally
                     # dire = torch.randn(args.batch_size, 3, 256, 256)
