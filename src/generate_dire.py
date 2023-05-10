@@ -17,23 +17,30 @@ def main(args, device: torch.device):
     '''Open images from read_dir, compute DIRE, and save to write_dir.
     The number of images loaded in at a time is determined by batch_size.
     '''
+    print('Loading model...')
     model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=(True if device=='cuda' else False))
+    print('Model loaded.')
     for root, dirs, files in os.walk(args.read_dir):
         file_position = 0
+        print('Creating directories...')
         if not os.path.exists(args.write_dir_dire):
             os.makedirs(args.write_dir_dire)
         if not os.path.exists(args.write_dir_latent_dire):
             os.makedirs(args.write_dir_latent_dire)
+        print('Directories created.')
         while True:
             # load batch of images
+            print('Loading batch...')
             batch = torch.cat([model.img_to_tensor(
                 img, 512) for img in [os.path.join(args.read_dir, file) for file in files[file_position:file_position+args.batch_size]]])
             # compute DIRE and latent DIRE
+            print('Computing DIRE...')
             with torch.no_grad():
                 dire, latent_dire, _, _, _ = model(
                     batch.to(device), n_steps=50)
 
             # save tensors
+            print('Saving tensors...')
             for i in range(args.batch_size):
                 torch.save(dire[i], os.path.join(
                     args.write_dir_dire, f'{files[file_position+i].rsplit()[0]}_dire.pt'))
@@ -50,7 +57,7 @@ def main(args, device: torch.device):
             # Edge case: last batch
             if len(files) - file_position < args.batch_size:
                 batch = torch.cat([model.img_to_tensor(
-                    img) for img in [os.path.join(args.read_dir, file) for file in files[file_position:]]])
+                    img, 512) for img in [os.path.join(args.read_dir, file) for file in files[file_position:]]])
                 with torch.no_grad():
                     dire, latent_dire, _, _, _ = model(
                         batch.to(device), n_steps=50)
