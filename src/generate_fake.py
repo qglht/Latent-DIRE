@@ -23,7 +23,7 @@ prompts = list(mapping_caption_wordnet.values())
 path = "/cluster/home/qguilhot/Latent-DIRE/data/train/"
 directories = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
 
-new_prompts = [prompt for prompt in prompts if prompt not in directories]
+prompts = [prompt for prompt in prompts if prompt not in directories]
 print("prompts loaded")
 
 # generate fake images from these prompts
