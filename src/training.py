@@ -28,7 +28,7 @@ class Classifier(pl.LightningModule):
         dire, label = batch
         if np.random.rand() < 0.5:  # 50% chance for horizontal flip
             dire = hflip(dire)
-        pred: torch.Tensor = self.model(dire)
+        pred: torch.Tensor = self.classifier(dire)
         loss = F.binary_cross_entropy(pred, label)
         acc = accuracy_score(label, pred.argmax(axis=1))
         ap = average_precision_score(label, pred[:, 1])
@@ -39,7 +39,7 @@ class Classifier(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred: torch.Tensor = self.model(dire)
+        pred: torch.Tensor = self.classifier(dire)
         loss = F.binary_cross_entropy(pred, label)
         acc = accuracy_score(label, pred.argmax(axis=1))
         ap = average_precision_score(label, pred[:, 1])
@@ -48,7 +48,7 @@ class Classifier(pl.LightningModule):
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred: torch.Tensor = self.model(dire)
+        pred: torch.Tensor = self.classifier(dire)
         loss = F.binary_cross_entropy(pred, label)
         acc = accuracy_score(label, pred.argmax(axis=1))
         ap = average_precision_score(label, pred[:, 1])
