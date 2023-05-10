@@ -5,8 +5,8 @@ import pickle
 
 wandb.init(project="generate", entity="latent-dire", name="generate_fake")
 
-batch_size = 10
-batches = 5
+batch_size = 12
+batches = 4 
 
 # read file src/LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
 
@@ -14,7 +14,8 @@ mapping_caption_wordnet = {}
 with open("src/LOC_synset_mapping.txt") as f:
     for line in f:
         line = line.strip().split()
-        mapping_caption_wordnet[line[0]] = line[1]
+        caption = ' '.join(line[1:])
+        mapping_caption_wordnet[line[0]] = caption
 
 # get all possible prompts and save them in a list
 
