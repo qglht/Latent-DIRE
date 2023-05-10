@@ -1,4 +1,4 @@
-from typing import List
+from typing import Tuple
 
 from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import ImageFolder
@@ -13,7 +13,7 @@ This assumes we have organized the data in the following way:
 """
 
 
-def get_dataloaders(root: str, batch_size: int, shuffle: bool = True) -> List[DataLoader, DataLoader, DataLoader]:
+def get_dataloaders(root: str, batch_size: int, shuffle: bool = True) -> Tuple[DataLoader, DataLoader, DataLoader]:
     dataset = ImageFolder(root, transform=preprocess_resnet50_pixel)
     train_dataset, val_dataset, test_dataset = random_split(dataset, lenghts=[0.8, 0.1, 0.1])
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
