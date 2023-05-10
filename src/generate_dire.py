@@ -36,9 +36,9 @@ def main(args, device: torch.device):
             # save tensors
             for i in range(args.batch_size):
                 torch.save(dire[i], os.path.join(
-                    args.write_dir_dire, f'{files[file_position+i]}_dire.pt'))
+                    args.write_dir_dire, f'{files[file_position+i].rsplit()[0]}_dire.pt'))
                 torch.save(latent_dire[i], os.path.join(
-                    args.write_dir_latent_dire, f'{files[file_position+i]}_latent_dire.pt'))
+                    args.write_dir_latent_dire, f'{files[file_position+i].rsplit()[0]}_latent_dire.pt'))
             # update file position
             file_position += args.batch_size
 
@@ -61,9 +61,9 @@ def main(args, device: torch.device):
 
                 for i in range(len(files) - file_position):
                     torch.save(dire[i], os.path.join(
-                        args.write_dir_dire, f'{files[file_position+i]}_dire.pt'))
+                        args.write_dir_dire, f'{files[file_position+i].rsplit()[0]}_dire.pt'))
                     torch.save(latent_dire[i], os.path.join(
-                        args.write_dir_latent_dire, f'{files[file_position+i]}_latent_dire.pt'))
+                        args.write_dir_latent_dire, f'{files[file_position+i].rsplit()[0]}_latent_dire.pt'))
                 break
 
 
