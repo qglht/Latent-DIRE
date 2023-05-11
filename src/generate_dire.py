@@ -26,6 +26,7 @@ from argparse import ArgumentParser
 from functools import partial
 import logging
 import os
+import shutil
 
 import torch
 from torch.utils.data import DataLoader
@@ -58,8 +59,13 @@ def main(args, device: torch.device):
         n_steps=args.dire_steps,
     )
 
+    scratch_dir = os.environ["TMPDIR"]
+    img_dir = f"{scratch_dir}/folder/{args.read_dir}"
+    shutil.move(args.read_dir, img_dir)  # nest in subfolder
+
+    read_dir = f"{scratch_dir}/folder/"
     transform = partial(model.img_to_tensor, size=512)
-    dataset = ImageFolder(args.read_dir, transform=transform)
+    dataset = ImageFolder(read_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
