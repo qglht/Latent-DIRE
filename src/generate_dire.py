@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from functools import partial
 import logging
 import os
 
@@ -26,9 +27,15 @@ def main(args, device: torch.device):
         os.makedirs(args.write_dir_latent_dire)
 
     logger.info("Loading model...")
-    model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=(True if device == "cuda" else False))
+    model = LatentDIRE(
+        device,
+        pretrained_model_name=args.model_id,
+        use_fp16=(True if device == "cuda" else False),
+        n_steps=args.dire_steps,
+    )
 
-    dataset = ImageFolder("../data/data_dev_dire", transform=model.img_to_tensor)
+    transform = partial(model.img_to_tensor, size=512)
+    dataset = ImageFolder(args.read_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
@@ -38,7 +45,10 @@ def main(args, device: torch.device):
         dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
         torch.save(dire, dire_path)
         latent_dire_path = os.path.join(args.write_dir_latent_dire, f"{idx}_latent_dire.pt")
-        torch.save(dire, latent_dire_path)
+        torch.save(latent_dire, latent_dire_path)
+
+        if args.dev_run:
+            break
 
         if idx % 100 == 0:
             logger.info(f"Processed {idx} batches ({idx * args.batch_size} images)")
@@ -50,6 +60,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_id", type=str, default="runwayml/stable-diffusion-v1-5", help="model to use for computing DIRE"
     )
+    parser.add_argument("--dire_steps", type=int, required=True, help="How many DDIM steps to take.")
     parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
     parser.add_argument("--read_dir", type=str, help="directory to read images from")
     parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
