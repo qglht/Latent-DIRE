@@ -1,7 +1,7 @@
 """
 This script computes both the DIRE and latent DIRE representations for a folder of images.
 
-It assumes you have folder of images you want to compute the representations for. The folder should be 
+It assumes you have a folder of images you want to compute the representations for. The folder should be 
 structured as follows, where read_dir is the directory name you give to the argparser:
 
     read_dir
@@ -12,13 +12,10 @@ structured as follows, where read_dir is the directory name you give to the argp
 
 Before launching the script, compress the read_dir folder using 
 
-    tar czf compressed_name read_dir
+    tar czf compressed_name.tar.gz read_dir
 
 and put it at /cluster/scratch/user/ where user is your ETH Kürzel. Finally, make sure you adapt the dire_generation.sh file. 
-You need to change to things:
-
-    1) You need to change the input of rsync (the first argument to rsync). Give it the name of your compressed folder.
-    2) You need to change the read_dir given to generate_dire.py. You give it the name of the folder you previously compressed. 
+You need to provide the path of your compressed folder. Write your path into the variable COMPRESSED_FOLDER_PATH.
 """
 
 
@@ -60,7 +57,7 @@ def main(args, device: torch.device):
     )
 
     scratch_dir = os.environ["TMPDIR"]
-    img_dir = f"{scratch_dir}/subfolder/images"
+    img_dir = f"{scratch_dir}/images/"
 
     transform = partial(model.img_to_tensor, size=512)
     dataset = ImageFolder(img_dir, transform=transform)
