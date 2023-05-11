@@ -24,7 +24,6 @@ for subfolder in subfolders:
     # get the list of files in the subfolder
     files = os.listdir(subfolder_path)
     # loop through the files
-    pdb.set_trace()
     for file in files:
         # get the path to the file
         file_path = os.path.join(subfolder_path, file)
@@ -33,5 +32,5 @@ for subfolder in subfolders:
         flattened_file_path = os.path.join(flattened_path, subfolder_name + file)
         print(f"this is the flattened file path {flattened_file_path}")
         # copy the file to the flattened folder
-        os.system('cp ' + file_path + ' ' + flattened_file_path)
+        os.system(f"cp '{file_path}' '{flattened_file_path}'")
 
