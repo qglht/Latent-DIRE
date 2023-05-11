@@ -56,7 +56,7 @@ def main(args, device: torch.device):
         device,
         pretrained_model_name=args.model_id,
         use_fp16=(True if device == "cuda" else False),
-        n_steps=args.dire_steps,
+        n_steps=args.ddim_steps,
     )
 
     scratch_dir = os.environ["TMPDIR"]
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model_id", type=str, default="runwayml/stable-diffusion-v1-5", help="model to use for computing DIRE"
     )
-    parser.add_argument("--dire_steps", type=int, required=True, help="How many DDIM steps to take.")
+    parser.add_argument("--ddim_steps", type=int, required=True, help="How many DDIM steps to take.")
     parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
     parser.add_argument("--read_dir", type=str, help="directory to read images from")
     parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
