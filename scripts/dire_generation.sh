@@ -9,4 +9,7 @@
 #SBATCH --gres=gpumem:32g
 
 module load gcc/8.2.0 python_gpu/3.10.4 r/4.0.2 git-lfs/2.3.0 eth_proxy npm/6.14.9
+pip install -U torch torchvision torchaudio
+pip install -U xformers
+pip install -U diffusers["torch"] accelerate transformers
 python src/generate_dire.py --batch_size 16 --read_dir "/cluster/home/qguilhot/Latent-DIRE/data/fake" --write_dir_dire "/cluster/home/qguilhot/Latent-DIRE/data/dire_fake" --write_dir_latent_dire "/cluster/home/qguilhot/Latent-DIRE/data/dire_latent_fake"
