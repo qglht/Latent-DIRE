@@ -10,6 +10,6 @@
 #SBATCH --tmp=20G
 
 module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
-rsync -chavzP /cluster/scratch/$USER/imagenet.tar $TMPDIR/imagenet.tar
-tar xf $TMPDIR/imagenet.tar --directory=$TMPDIR --checkpoint=1000 --checkpoint-action=dot
+rsync -chavzP /cluster/scratch/$USER/imagenet.tar $TMPDIR/images.tar
+tar xf $TMPDIR/images.tar --directory=$TMPDIR --checkpoint=1000 --checkpoint-action=dot
 python src/generate_dire.py --ddim-steps 10 --batch_size 20 --read_dir $TMPDIR/imagenet --write_dir_dire "/cluster/scratch/$USER/imagenet_dire" --write_dir_latent_dire "/cluster/scratch/$USER/imagenet_latent_dire"
