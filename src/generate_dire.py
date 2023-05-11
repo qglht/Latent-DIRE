@@ -1,3 +1,27 @@
+"""
+This script computes both the DIRE and latent DIRE representations for a folder of images.
+
+It assumes your folder is structured as follows, where read_dir is what you give to the argparser:
+
+    read_dir
+    └──foldername             (needed by torch's ImageFolder)
+        ├──img1.JPEG
+        ├──img2.JPEG
+        ├──img3.JPG
+        :
+
+You can use any name in place of foldername. Before launching the script, compress the read_dir folder using 
+
+    tar czf compressed_name read_dir
+
+and put it at /cluster/scratch/user/
+Finally, make sure you adapt the dire_generation.sh file with the correct tar file. You need to change to things. 
+Firstly, you need to change the input of rsync (the first argument to rsync). Give it the name of your compressed folder.
+Secondly, you need to change the read_dir given to generate_dire.py. You give it the name of the folder you previously 
+compressed. 
+"""
+
+
 from argparse import ArgumentParser
 from functools import partial
 import logging
