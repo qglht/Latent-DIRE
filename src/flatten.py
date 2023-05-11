@@ -1,4 +1,5 @@
 import os
+import pdb
 
 # gather all the files under the subfolders data/fake/subfolder/ into data/fake_flattened/
 
@@ -23,12 +24,13 @@ for subfolder in subfolders:
     # get the list of files in the subfolder
     files = os.listdir(subfolder_path)
     # loop through the files
+    pdb.set_trace()
     for file in files:
         # get the path to the file
         file_path = os.path.join(subfolder_path, file)
         print(f"this is the file path {file_path}")
         # get the path to the flattened file
-        flattened_file_path = os.path.join(os.path.join(flattened_path, subfolder_name), file)
+        flattened_file_path = os.path.join(flattened_path, subfolder_name + file)
         print(f"this is the flattened file path {flattened_file_path}")
         # copy the file to the flattened folder
         os.system('cp ' + file_path + ' ' + flattened_file_path)
