@@ -60,12 +60,10 @@ def main(args, device: torch.device):
     )
 
     scratch_dir = os.environ["TMPDIR"]
-    img_dir = f"{scratch_dir}/folder/{args.read_dir}"
-    shutil.move(args.read_dir, img_dir)  # nest in subfolder
+    img_dir = f"{scratch_dir}/subfolder/images"
 
-    read_dir = f"{scratch_dir}/folder/"
     transform = partial(model.img_to_tensor, size=512)
-    dataset = ImageFolder(read_dir, transform=transform)
+    dataset = ImageFolder(img_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
@@ -92,17 +90,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--ddim_steps", type=int, required=True, help="How many DDIM steps to take.")
     parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
-    parser.add_argument("--read_dir", type=str, help="directory to read images from")
     parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
     parser.add_argument("--write_dir_latent_dire", type=str, help="directory to write latent dire to")
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Setup logging
-    logging.basicConfig(
-        level=logging.INFO,
-        filename="generate_dire.log",
-        filemode="w",
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
     main(args, device)
