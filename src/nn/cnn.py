@@ -14,5 +14,6 @@ class CNN(nn.Module):
         # FIXME
         return x
 
-def build_cnn(device: str='cpu') -> nn.Module:
+
+def build_cnn(device: str = "cpu") -> nn.Module:
     return CNN().to(device)
