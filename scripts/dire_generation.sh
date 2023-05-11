@@ -5,8 +5,11 @@
 #SBATCH --time 10:00:00
 #SBATCH --ntasks=4
 #SBATCH --mem-per-cpu=4G
-#SBATCH --job-name=job-name
+#SBATCH --job-name=compute-dire
 #SBATCH --gres=gpumem:32g
+#SBATCH --tmp=20G
 
-module load gcc/8.2.0 python_gpu/3.10.4 r/4.0.2 git-lfs/2.3.0 eth_proxy npm/6.14.9
-python src/generate_dire.py --batch_size 16 --read_dir "/cluster/scratch/lcolonn/ImageNet_temp" --write_dir_dire "/cluster/scratch/lcolonn/ImageNet_dire" --write_dir_latent_dire "/cluster/scratch/lcolonn/ImageNet_latent_dire"
+module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
+rsync -chavzP  /cluster/scratch/hehlif/imagenet.tar $TMPDIR/imagenet.tar
+tar xf $TMPDIR/imagenet.tar --directory=$TMPDIR/imagenet
+python src/generate_dire.py -d --batch_size 20 --read_dir $TMPDIR/imagenet --write_dir_dire "/cluster/scratch/hehlif/imagenet_dire" --write_dir_latent_dire "/cluster/scratch/hehlif/imagenet_latent_dire"

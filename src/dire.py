@@ -9,8 +9,8 @@ import torch.nn as nn
 from torchvision.transforms.functional import pil_to_tensor
 from tqdm.auto import tqdm
 
-# from src.config import get_ADM_config # Issue with relative imports
-from config import get_ADM_config
+# if this import doesn't work, you have not installed src, see https://www.notion.so/Docs-0dabc9ae19d54649b031e94e0cb0dff9
+from src.config import get_ADM_config
 from guided_diffusion.dist_util import load_state_dict
 from guided_diffusion.script_util import create_model_and_diffusion
 

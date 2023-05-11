@@ -1,16 +1,15 @@
-"""
-To be run in src folder.
-"""
-
-
 from argparse import ArgumentParser
 import logging
 import os
 
 import torch
+from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+from tqdm.auto import tqdm
 import wandb
 
-from dire import LatentDIRE
+# if this import doesn't work, you have not installed src, see https://www.notion.so/Docs-0dabc9ae19d54649b031e94e0cb0dff9
+from src.dire import LatentDIRE
 
 
 def main(args, device: torch.device):
@@ -18,83 +17,36 @@ def main(args, device: torch.device):
     The number of images loaded in at a time is determined by batch_size.
     """
     wandb.init(project="compute-dire", entity="latent-dire")
+    logger = logging.getLogger(__name__)
 
-    print("Loading model...")
+    logger.info("Creating directories...")
+    if not os.path.exists(args.write_dir_dire):
+        os.makedirs(args.write_dir_dire)
+    if not os.path.exists(args.write_dir_latent_dire):
+        os.makedirs(args.write_dir_latent_dire)
+
+    logger.info("Loading model...")
     model = LatentDIRE(device, pretrained_model_name=args.model_id, use_fp16=(True if device == "cuda" else False))
-    print("Model loaded.")
-    for root, dirs, files in os.walk(args.read_dir):
-        file_position = 0
-        print("Creating directories...")
-        if not os.path.exists(args.write_dir_dire):
-            os.makedirs(args.write_dir_dire)
-        if not os.path.exists(args.write_dir_latent_dire):
-            os.makedirs(args.write_dir_latent_dire)
-        print("Directories created.")
-        while True:
-            # load batch of images
-            print("Loading batch...")
-            batch = torch.cat(
-                [
-                    model.img_to_tensor(img, 512)
-                    for img in [
-                        os.path.join(args.read_dir, file)
-                        for file in files[file_position : file_position + args.batch_size]
-                    ]
-                ]
-            )
-            # compute DIRE and latent DIRE
-            print("Computing DIRE...")
-            with torch.no_grad():
-                dire, latent_dire, _, _, _ = model(batch.to(device), n_steps=50)
 
-            # save tensors
-            print("Saving tensors...")
-            for i in range(args.batch_size):
-                torch.save(
-                    dire[i], os.path.join(args.write_dir_dire, f'{files[file_position+i].rsplit(".")[0]}_dire.pt')
-                )
-                torch.save(
-                    latent_dire[i],
-                    os.path.join(args.write_dir_latent_dire, f'{files[file_position+i].rsplit(".")[0]}_latent_dire.pt'),
-                )
-            # update file position
-            file_position += args.batch_size
+    dataset = ImageFolder("../data/data_dev_dire", transform=model.img_to_tensor)
+    dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
-            # log progress
-            if file_position % 100 == 0:
-                logging.info(f"Processed {file_position} images")
-                print(f"Processed {file_position} images")
+    for idx, (batch, _) in tqdm(enumerate(dataloader)):
+        batch = batch.squeeze(1)
+        dire, latent_dire, *_ = model(batch.to(device))
 
-            # Edge case: last batch
-            if len(files) - file_position < args.batch_size:
-                batch = torch.cat(
-                    [
-                        model.img_to_tensor(img, 512)
-                        for img in [os.path.join(args.read_dir, file) for file in files[file_position:]]
-                    ]
-                )
-                with torch.no_grad():
-                    dire, latent_dire, _, _, _ = model(batch.to(device), n_steps=50)
+        dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
+        torch.save(dire, dire_path)
+        latent_dire_path = os.path.join(args.write_dir_latent_dire, f"{idx}_latent_dire.pt")
+        torch.save(dire, latent_dire_path)
 
-                    # For testing locally
-                    # dire = torch.randn(args.batch_size, 3, 256, 256)
-                    # latent_dire = torch.randn(args.batch_size, 3, 64, 64)
-
-                for i in range(len(files) - file_position):
-                    torch.save(
-                        dire[i], os.path.join(args.write_dir_dire, f'{files[file_position+i].rsplit(".")[0]}_dire.pt')
-                    )
-                    torch.save(
-                        latent_dire[i],
-                        os.path.join(
-                            args.write_dir_latent_dire, f'{files[file_position+i].rsplit(".")[0]}_latent_dire.pt'
-                        ),
-                    )
-                break
+        if idx % 100 == 0:
+            logger.info(f"Processed {idx} batches ({idx * args.batch_size} images)")
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    parser.add_argument("-d", "--dev-run", action="store_true", help="Whether to run a test run.")
     parser.add_argument(
         "--model_id", type=str, default="runwayml/stable-diffusion-v1-5", help="model to use for computing DIRE"
     )
