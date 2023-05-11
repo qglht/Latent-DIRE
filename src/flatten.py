@@ -9,7 +9,7 @@ cwd = os.getcwd()
 data_path = os.path.join(cwd, 'data/fake/')
 
 # get the path to the flattened folder
-flattened_path = os.path.join(data_path, 'data/fake_flattened/')
+flattened_path = os.path.join(cwd, 'data/fake_flattened/')
 
 # get the list of subfolders in the data folder
 subfolders = os.listdir(data_path)
