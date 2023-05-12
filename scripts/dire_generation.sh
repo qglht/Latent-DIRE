@@ -11,6 +11,7 @@
 COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/imagenet.tar.gz"
 
 module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
+pip install . src/guided-diffusion
 rsync -chavzP $COMPRESSED_FOLDER_PATH $TMPDIR/images.tar.gz
 mkdir -p $TMPDIR/images
 tar xzf $TMPDIR/images.tar.gz -C $TMPDIR/images 
