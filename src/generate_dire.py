@@ -23,7 +23,6 @@ from argparse import ArgumentParser
 from functools import partial
 import logging
 import os
-import shutil
 
 import torch
 from torch.utils.data import DataLoader
