@@ -9,10 +9,10 @@ config = {
 }
 wandb.init(project="generate", entity="latent-dire", name="generate_fake", config=config)
 
-# read file src/LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
+# read file LOC_synset_mapping.txt that maps ILSVRC2012_synset to WordNet synset
 
 mapping_caption_wordnet = {}
-with open("src/LOC_synset_mapping.txt") as f:
+with open("data/LOC_synset_mapping.txt") as f:
     for line in f:
         line = line.strip().split()
         caption = " ".join(line[1:])
