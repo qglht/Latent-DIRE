@@ -27,11 +27,11 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
-from tqdm.auto import tqdm
+from tqdm import tqdm
 import wandb
 
 # if this import doesn't work, you have not installed src, see https://www.notion.so/Docs-0dabc9ae19d54649b031e94e0cb0dff9
-from src.dire import LatentDIRE
+from src.dire import LatentDIRE, ADMDIRE
 
 
 def main(args, device: torch.device):
@@ -48,22 +48,32 @@ def main(args, device: torch.device):
         os.makedirs(args.write_dir_latent_dire)
 
     logger.info("Loading model...")
-    model = LatentDIRE(
-        device,
-        pretrained_model_name=args.model_id,
-        use_fp16=(True if device == "cuda" else False),
-    )
-
+    if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+        model = LatentDIRE(
+            device,
+            pretrained_model_name=args.model_id,
+            use_fp16=(True if device == "cuda" else False),
+        )
+        transform = partial(model.img_to_tensor, size=512)
+    elif args.model_id in ["models/lsun_bedroom.pt", "models/256x256_diffusion_uncond.pt"]:
+        model = ADMDIRE(
+            device,
+            model_path=args.model_id,
+            use_fp16=(True if device == "cuda" else False),
+        )
+        transform = partial(model.img_to_tensor, size=256)
     scratch_dir = os.environ["TMPDIR"]
     img_dir = f"{scratch_dir}/images/"
 
-    transform = partial(model.img_to_tensor, size=512)
     dataset = ImageFolder(img_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
-        batch = batch.squeeze(1)
-        dire, latent_dire, *_ = model(batch.to(device), n_steps=args.ddim_steps)
+        batch = batch.squeeze(1).to(device)
+        if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+            dire, latent_dire, *_ = model(batch, n_steps=args.ddim_steps)
+        else:
+            dire, _ = model(batch, n_steps=args.ddim_steps)
 
         dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
         torch.save(dire, dire_path)
