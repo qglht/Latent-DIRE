@@ -48,7 +48,7 @@ def main(args, device: torch.device):
         os.makedirs(args.write_dir_latent_dire)
 
     logger.info("Loading model...")
-    if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+    if args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]:
         model = LatentDIRE(
             device,
             pretrained_model_name=args.model_id,
@@ -62,9 +62,9 @@ def main(args, device: torch.device):
             use_fp16=(True if device == "cuda" else False),
         )
         transform = partial(model.img_to_tensor, size=256)
+
     scratch_dir = os.environ["TMPDIR"]
     img_dir = f"{scratch_dir}/images/"
-
     dataset = ImageFolder(img_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
