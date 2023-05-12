@@ -9,8 +9,8 @@ import torch.nn as nn
 from torchvision.transforms.functional import pil_to_tensor
 from tqdm.auto import tqdm
 
-# from src.config import get_ADM_config # Issue with relative imports
-from config import get_ADM_config
+# if this import doesn't work, you have not installed src, see https://www.notion.so/Docs-0dabc9ae19d54649b031e94e0cb0dff9
+from src.config import get_ADM_config
 from guided_diffusion.dist_util import load_state_dict
 from guided_diffusion.script_util import create_model_and_diffusion
 
@@ -53,7 +53,7 @@ class LatentDIRE(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        n_steps: int = 20,  # cf. section 4.1 in the DIRE paper
+        n_steps: int = None,  # cf. section 4.1 in the DIRE paper
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Compute DIRE(x).
@@ -66,6 +66,8 @@ class LatentDIRE(nn.Module):
         Returns:
             Tuple[torch.Tensor, ...]: DIRE(x), DIRE(z), reconstruction, latent_reconstruction, latent
         """
+        if n_steps == None:
+            n_steps = self.n_steps
         latent = self.encode(x)
         noise = self._ddim_inversion(latent, n_steps)
         batch_size = noise.shape[0]
