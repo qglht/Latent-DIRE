@@ -30,8 +30,10 @@ clean:
 	find . -type d -name "__pycache__" -delete
 
 ## Formatting
-lint:
-	black src --line-length 120
+format:
+	black src --line-length 120 --exclude guided-diffusion  
+lint: format
+
 
 ## Set up python interpreter environment
 create_environment:

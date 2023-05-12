@@ -77,7 +77,7 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/raw
+/data/
 
 
 # Mac OS-specific storage files
@@ -95,3 +95,4 @@ target/
 .xml
 reconnect_info
 models
+wandb

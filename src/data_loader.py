@@ -1,16 +1,23 @@
 from typing import Tuple
 
-import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, random_split
 from torchvision.datasets import ImageFolder
-from torchvision.transforms import Compose, Normalize, Resize, ToTensor
 
-from models.resnet50 import preprocess_resnet50_pixel
+from nn.resnet50 import preprocess_resnet50_pixel
+
+"""
+This assumes we have organized the data in the following way:
+    root
+    ├── real
+    └── fake
+"""
 
 
-def get_dataset(root):
-    return ImageFolder(root, transform=preprocess_resnet50_pixel)
+def get_dataloaders(root: str, batch_size: int, shuffle: bool = True) -> Tuple[DataLoader, DataLoader, DataLoader]:
+    dataset = ImageFolder(root, transform=preprocess_resnet50_pixel)
+    train_dataset, val_dataset, test_dataset = random_split(dataset, lengths=[0.8, 0.1, 0.1])
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
 
-
-def get_dataloader(root, batch_size: int = 32, shuffle: bool = True):
-    return DataLoader(get_dataset(root), batch_size=batch_size, shuffle=shuffle)
+    return train_loader, val_loader, test_loader

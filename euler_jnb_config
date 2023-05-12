@@ -7,3 +7,4 @@ JNB_WAITING_INTERVAL=10                 # Time interval to check if the job on t
 JNB_SSH_KEY_PATH=""                     # Path to SSH key with non-standard name
 JNB_SOFTWARE_STACK="new"                # Software stack to be used (old, new)
 JNB_WORKING_DIR="Latent-DIRE" 
+JNB_EXTRA_MODULES=("gcc/8.2.0" "python_gpu/3.10.4" "eth_proxy")

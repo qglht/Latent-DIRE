@@ -1,115 +1,124 @@
-from argparse import ArgumentParser
+import argparse
+from typing import Tuple
 
 import numpy as np
+
 import torch
-from sklearn.metrics import accuracy_score, average_precision_score
-from torch import nn
-from torch.utils.data import DataLoader
-from tqdm.auto import tqdm
-import wandb
-
+import torch.nn as nn
+from torch.optim import Adam, SGD
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torchmetrics.functional.classification import binary_accuracy, binary_average_precision
 from torchvision.transforms.functional import hflip
+import lightning.pytorch as pl
+from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from lightning.pytorch import Trainer, seed_everything
+from lightning.pytorch.loggers import WandbLogger
 
-from data_loader import get_dataloader
-from models.cnn import build_cnn
-from models.mlp import build_mlp
-from models.resnet50 import (build_resnet50_latent, build_resnet50_pixel,
-                             preprocess_resnet50_latent,
-                             preprocess_resnet50_pixel)
-
-
-def train_model(
-    train_dataloader: DataLoader,
-    model: torch.nn.Module,
-    loss_fn: torch.nn.Module,
-    optimizer: torch.optim.Optimizer,
-    epochs: int = 5,
-) -> None:
-    for epoch in range(epochs):
-        pred_hist, label_hist = [], []
-        for batch, (dire, label) in tqdm(enumerate(train_dataloader)):
-            dire = dire.to(device)
-            label: torch.Tensor = label.to(device)
-
-            # Compute prediction error, 50% chance for horizontal flip
-            if np.random.rand() < 0.5:
-                dire = hflip(dire)
-            pred: torch.Tensor = model(dire)
-            loss = loss_fn(pred, label)
-
-            # Backpropagation
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            pred_hist.append(pred.detach().cpu().numpy())
-            label_hist.append(label.detach().cpu().numpy())
+from data_loader import get_dataloaders
+from nn.model_collection import MODEL_DICT
 
 
-        # Compute metrics
-        pred_hist = np.concatenate(pred_hist, axis=0)
-        label_hist = np.concatenate(label_hist, axis=0)
-        acc = accuracy_score(label_hist, pred_hist.argmax(axis=1))
-        ap = average_precision_score(label_hist, pred_hist[:, 1])
-        wandb.log({"accuracy": acc, "average_precision": ap})
-        wandb.log({"loss": loss.item()})
+class Classifier(pl.LightningModule):
+    def __init__(self, model: str, optimizer: str, learning_rate: float) -> None:
+        super().__init__()
+        self.save_hyperparameters()
+        self.classifier = MODEL_DICT[model]()
+        self.loss = nn.CrossEntropyLoss()
+
+    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
+        dire, label = batch
+        if np.random.rand() < 0.5:  # 50% chance for horizontal flip
+            dire = hflip(dire)
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
+        metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
+        self.log_dict(metrics)
+
+        return loss
+
+    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+        dire, label = batch
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
+        metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
+        self.log_dict(metrics)
+
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+        dire, label = batch
+        pred = self.classifier(dire)
+        loss = self.loss(pred, label)
+        acc = binary_accuracy(pred.argmax(axis=1), label)
+        ap = binary_average_precision(pred[:, 1], label)
+        metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
+        self.log_dict(metrics)
+
+    def configure_optimizers(self) -> torch.optim.Optimizer:
+        optimizer = Adam if self.hparams.optimizer == "Adam" else SGD
+        if self.hparams.model == "resnet50_pixel":
+            optimizer = optimizer(self.classifier.fc.parameters(), lr=self.hparams.learning_rate)
+        else:
+            optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.learning_rate)
+
+        lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=2)
+
+        return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "val_acc"}
+
+
+def main(args: argparse.Namespace) -> None:
+    seed_everything(33914, workers=True)
+
+    # Setup Weights & Biases
+    wandb_logger = WandbLogger(project="Training", entity="latent-dire", config=vars(args))
+
+    # Load the data
+    train_loader, val_loader, test_loader = get_dataloaders(args.data_dir, args.batch_size, shuffle=True)
+
+    # Setup callbacks
+    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
+    checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath="models/")
+    lr_monitor = LearningRateMonitor(logging_interval="epoch")
+
+    clf = Classifier(args.model, args.optimizer, args.learning_rate)
+    trainer = Trainer(
+        fast_dev_run=args.dev_run,  # uncomment to debug
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
+        devices="auto",  # use all available GPUs
+        min_epochs=1,
+        max_epochs=args.max_epochs,
+        callbacks=[early_stop, checkpoint, lr_monitor],
+        # deterministic=True,  # slower, but reproducable: https://lightning.ai/docs/pytorch/stable/common/trainer.html#reproducibility
+        precision="16-mixed",
+        default_root_dir="models/",
+        logger=wandb_logger,
+    )
+    trainer.fit(clf, train_loader, val_loader)
+    trainer.test(clf, test_loader)
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--model", type=str, default="resnet50")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dev_run", action="store_true", help="Whether to run a test run.")
+    parser.add_argument("--model", type=str, default="resnet50_pixel")
+    parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     parser.add_argument("--batch_size", type=int, default=16)
-    parser.add_argument("--epochs", type=int, default=5)
-    parser.add_argument("--latent", type=bool, default=False,
-                        help="Whether to use Latent DIRE")
-    parser.add_argument("--optimizer", type=str,
-                        default="sgd", help="Optimizer to use")
-    parser.add_argument("--train_dir", type=str, default="data/train")
-    parser.add_argument("--val_dir", type=str, default="data/val")
-    parser.add_argument("--test_dir", type=str, default="data/test")
+    parser.add_argument("--max_epochs", type=int, default=100)
+    parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
+    parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
+    parser.add_argument("--learning_rate", type=float, default=0.001)
+    parser.add_argument("--data_dir", type=str, default="data/data")
     args = parser.parse_args()
 
     # Check arguments
     assert args.model in ["resnet50_latent", "resnet50_pixel", "mlp", "cnn"]
     assert args.batch_size > 0
-    assert args.epochs > 0
+    assert args.max_epochs > 0
     if args.latent:
         assert args.model in ["mlp", "cnn", "resnet50_latent"]
     else:
         assert args.model == "resnet50_pixel"
 
-    # Setup Weights & Biases
-    wandb.login()
-    wandb.init(project="dire", entity="dire")
-
-    # Check GPU availability
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    generator = torch.Generator().manual_seed(0)
-
-    # Load the data
-    train_loader = get_dataloader(args.train_dir, args.batch_size, shuffle=True)
-    test_loader = get_dataloader(args.test_dir, args.batch_size, shuffle=False)
-    val_loader = get_dataloader(args.val_dir, args.batch_size, shuffle=False)
-
-    # Build the model
-    model_dict = {
-        "resnet50_latent": build_resnet50_latent,
-        "resnet50_pixel": build_resnet50_pixel,
-        "mlp": build_mlp,
-        "cnn": build_cnn,
-    }
-    model = model_dict[args.model]().to(device)
-
-    # Train the model
-    loss_fn = nn.BCELoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-2)
-    if args.model == "resnet50_pixel":
-        optimizer = torch.optim.Adam(model.fc.parameters())
-    train_model(train_loader, model,
-                loss_fn, optimizer, epochs=10)
-
-    # Close Weights & Biases
-    wandb.finish()
-
-    # Save the model weights
-    torch.save(model.state_dict(), f"../model_weights/{args.model}.pt")
+    main(args)

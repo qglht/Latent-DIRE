@@ -30,10 +30,11 @@ class MLP(nn.Module):
         x = self.flatten(x)
         return self.model(x)
 
+
 def build_mlp(
     input_shape: Optional[Union[int, List[int]]] = None,
     layers: Optional[List[int]] = None,
-    device: str = 'cpu',
+    device: str = "cpu",
     norm_layer: Optional[Callable[..., nn.Module]] = None,
     activation_layer: Optional[Callable[..., nn.Module]] = nn.ReLU,
     dropout: Optional[float] = 0.0,
