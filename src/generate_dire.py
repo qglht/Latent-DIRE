@@ -53,7 +53,6 @@ def main(args, device: torch.device):
         device,
         pretrained_model_name=args.model_id,
         use_fp16=(True if device == "cuda" else False),
-        n_steps=args.ddim_steps,
     )
 
     scratch_dir = os.environ["TMPDIR"]
@@ -65,7 +64,7 @@ def main(args, device: torch.device):
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
         batch = batch.squeeze(1)
-        dire, latent_dire, *_ = model(batch.to(device))
+        dire, latent_dire, *_ = model(batch.to(device), n_steps=args.ddim_steps)
 
         dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
         torch.save(dire, dire_path)
@@ -94,5 +93,5 @@ if __name__ == "__main__":
 
     # Setup logging
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-    
+
     main(args, device)

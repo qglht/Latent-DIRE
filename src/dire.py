@@ -28,7 +28,7 @@ class LatentDIRE(nn.Module):
         pretrained_model_name: str = "runwayml/stable-diffusion-v1-5",
         generator: torch.Generator = torch.Generator().manual_seed(1),
         use_fp16: bool = True,
-        n_steps: int = 20,
+        n_steps: int = 20,  # cf. section 4.1 in the DIRE paper
     ) -> None:
         super().__init__()
         self.device = device
@@ -53,7 +53,7 @@ class LatentDIRE(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
-        n_steps: int = None,  # cf. section 4.1 in the DIRE paper
+        n_steps: int = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Compute DIRE(x).
@@ -66,7 +66,7 @@ class LatentDIRE(nn.Module):
         Returns:
             Tuple[torch.Tensor, ...]: DIRE(x), DIRE(z), reconstruction, latent_reconstruction, latent
         """
-        if n_steps == None:
+        if n_steps is None:
             n_steps = self.n_steps
         latent = self.encode(x)
         noise = self._ddim_inversion(latent, n_steps)
