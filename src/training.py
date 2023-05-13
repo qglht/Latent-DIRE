@@ -2,20 +2,20 @@ import argparse
 from typing import Tuple
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam, SGD
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.functional.classification import binary_accuracy, binary_average_precision
 from torchvision.transforms.functional import hflip
+
 import lightning.pytorch as pl
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
 from lightning.pytorch import Trainer, seed_everything
 from lightning.pytorch.loggers import WandbLogger
 
-from data_loader import get_dataloaders
-from nn.model_collection import MODEL_DICT
+from src.data_loader import get_dataloaders
+from src.nn.model_collection import MODEL_DICT
 
 
 class Classifier(pl.LightningModule):
@@ -75,7 +75,9 @@ def main(args: argparse.Namespace) -> None:
     wandb_logger = WandbLogger(project="Training", entity="latent-dire", config=vars(args))
 
     # Load the data
-    train_loader, val_loader, test_loader = get_dataloaders(args.data_dir, args.batch_size, shuffle=True)
+    train_loader, val_loader, test_loader = get_dataloaders(
+        args.data_dir, args.batch_size, num_workers=args.num_workers, shuffle=True
+    )
 
     # Setup callbacks
     early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
@@ -103,13 +105,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dev_run", action="store_true", help="Whether to run a test run.")
     parser.add_argument("--model", type=str, default="resnet50_pixel")
-    parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_epochs", type=int, default=100)
-    parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
-    parser.add_argument("--learning_rate", type=float, default=0.001)
+    parser.add_argument("--learning_rate", type=float, default=0.005)
     parser.add_argument("--data_dir", type=str, default="data/data")
+    parser.add_argument("--num_workers", type=int, default=4, help="Number of workers for the data loader.")
+    # parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
+    # parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
     args = parser.parse_args()
 
     # Check arguments

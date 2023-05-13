@@ -13,11 +13,11 @@ This assumes we have organized the data in the following way:
 """
 
 
-def get_dataloaders(root: str, batch_size: int, shuffle: bool = True) -> Tuple[DataLoader, DataLoader, DataLoader]:
+def get_dataloaders(root: str, batch_size: int, num_workers:int = 0, shuffle: bool = True) -> Tuple[DataLoader, DataLoader, DataLoader]:
     dataset = ImageFolder(root, transform=preprocess_resnet50_pixel)
     train_dataset, val_dataset, test_dataset = random_split(dataset, lengths=[0.8, 0.1, 0.1])
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=shuffle)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=shuffle)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=shuffle)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=shuffle)
 
     return train_loader, val_loader, test_loader
