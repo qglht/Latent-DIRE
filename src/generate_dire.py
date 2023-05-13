@@ -72,18 +72,25 @@ def main(args, device: torch.device):
         batch = batch.squeeze(1).to(device)
         if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
             dire, latent_dire, *_ = model(batch, n_steps=args.ddim_steps)
+            dire = model.tensor_to_pil(dire)
+            latent_dire = model.tensor_to_pil(latent_dire)
         else:
             dire, _ = model(batch, n_steps=args.ddim_steps)
+            dire = model.tensor_to_pil(dire)
 
-        dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
-        torch.save(dire, dire_path)
-        latent_dire_path = os.path.join(args.write_dir_latent_dire, f"{idx}_latent_dire.pt")
-        torch.save(latent_dire, latent_dire_path)
+        for i in range(args.batch_size):
+            dire_path = os.path.join(args.write_dir_dire, f"{idx*args.batch_size + i}_dire.jpeg")
+            dire.save(dire_path)
+            if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+                latent_dire_path = os.path.join(
+                    args.write_dir_latent_dire, f"{idx*args.batch_size + i}_latent_dire.jpeg"
+                )
+                latent_dire.save(latent_dire_path)
 
         if args.dev_run:
             break
 
-        if idx % 100 == 0:
+        if idx % 10 == 0:
             logger.info(f"Processed {idx} batches ({idx * args.batch_size} images)")
 
 
