@@ -110,8 +110,8 @@ if __name__ == "__main__":
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
     parser.add_argument("--learning_rate", type=float, default=0.005)
     parser.add_argument("--data_dir", type=str, default="data/data")
-    parser.add_argument("--num_workers", type=int, default=4, help="Number of workers for the data loader.")
-    # parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
+    parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for the data loader.")
+    parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     # parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
     args = parser.parse_args()
 
