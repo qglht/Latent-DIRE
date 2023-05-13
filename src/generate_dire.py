@@ -70,7 +70,7 @@ def main(args, device: torch.device):
 
     for idx, (batch, _) in tqdm(enumerate(dataloader)):
         batch = batch.squeeze(1).to(device)
-        if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+        if args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]:
             dire, latent_dire, *_ = model(batch, n_steps=args.ddim_steps)
             dire = model.tensor_to_pil(dire)
             latent_dire = model.tensor_to_pil(latent_dire)
@@ -81,7 +81,7 @@ def main(args, device: torch.device):
         for i in range(args.batch_size):
             dire_path = os.path.join(args.write_dir_dire, f"{idx*args.batch_size + i}_dire.jpeg")
             dire.save(dire_path)
-            if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+            if args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]:
                 latent_dire_path = os.path.join(
                     args.write_dir_latent_dire, f"{idx*args.batch_size + i}_latent_dire.jpeg"
                 )
