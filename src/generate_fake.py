@@ -17,7 +17,7 @@ with open("data/LOC_synset_mapping.txt") as f:
 # get all possible prompts and save them in a list
 prompts = list(mapping_caption_wordnet.values())
 
-path = f"/cluster/home/{os.environ['$USER']}/Latent-DIRE/data/fake/"
+path = f"/cluster/home/{os.environ['USER']}/Latent-DIRE/data/fake/"
 directories = [f for f in os.listdir(path) if os.path.isdir(os.path.join(path, f))]
 prompts = [prompt for prompt in prompts if prompt not in directories]
 print("prompts loaded")
