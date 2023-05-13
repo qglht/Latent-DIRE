@@ -1,0 +1,3 @@
+[submodule "src/guided-diffusion"]
+	path = src/guided-diffusion
+	url = git@github.com:fhehli/guided-diffusion.git

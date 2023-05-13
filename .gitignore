@@ -8,6 +8,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+venv/
 build/
 develop-eggs/
 dist/
@@ -76,7 +77,7 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
-/data/raw
+/data/
 
 
 # Mac OS-specific storage files
@@ -92,3 +93,5 @@ target/
 *.csv
 *.JPEG
 *.xml
+models
+wandb

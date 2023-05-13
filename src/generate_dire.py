@@ -1,71 +1,106 @@
-import os
-import sys
+"""
+This script computes both the DIRE and latent DIRE representations for a folder of images.
+
+It assumes you have a folder of images you want to compute the representations for. The folder should be 
+structured as follows, where read_dir is the directory name you give to the argparser:
+
+    read_dir
+    ├──img1.JPEG
+    ├──img2.JPEG
+    ├──img3.JPG
+    :
+
+Before launching the script, compress the read_dir folder using 
+
+    tar czf compressed_name.tar.gz read_dir
+
+and put it at /cluster/scratch/user/ where user is your ETH Kürzel. Finally, make sure you adapt the dire_generation.sh file. 
+You need to provide the path of your compressed folder. Write your path into the variable COMPRESSED_FOLDER_PATH.
+"""
+
+
 from argparse import ArgumentParser
+from functools import partial
+import logging
+import os
 
 import torch
+from torch.utils.data import DataLoader
+from torchvision.datasets import ImageFolder
+from tqdm import tqdm
+import wandb
 
-from dire import LatentDIRE
+# if this import doesn't work, you have not installed src, see https://www.notion.so/Docs-0dabc9ae19d54649b031e94e0cb0dff9
+from src.dire import LatentDIRE, ADMDIRE
 
 
 def main(args, device: torch.device):
-    '''Open images from read_dir, compute DIRE, and save to write_dir.
+    """Open images from read_dir, compute DIRE, and save to write_dir.
     The number of images loaded in at a time is determined by batch_size.
-    '''
-    model = LatentDIRE(device, args.model_id, use_fp16=False)
-    for root, dirs, files in os.walk(args.read_dir):
-        file_position = 0
-        if not os.path.exists(args.write_dir):
-            os.makedirs(args.write_dir)
-        while True:
-            # load batch of images
-            batch = torch.cat([model.img_to_tensor(
-                img) for img in [os.path.join(args.read_dir, file) for file in files[file_position:file_position+args.batch_size]]])
-            # compute DIRE and latent DIRE
-            with torch.no_grad():
-                dire, latent_dire, _, _, _ = model(
-                    batch.to(device), n_steps=50)
+    """
+    wandb.init(project="compute-dire", entity="latent-dire")
+    logger = logging.getLogger(__name__)
 
-            # For testing locally
-            # dire = torch.randn(args.batch_size, 3, 256, 256)
-            # latent_dire = torch.randn(args.batch_size, 3, 64, 64)
+    logger.info("Creating directories...")
+    if not os.path.exists(args.write_dir_dire):
+        os.makedirs(args.write_dir_dire)
+    if not os.path.exists(args.write_dir_latent_dire):
+        os.makedirs(args.write_dir_latent_dire)
 
-            # save tensors
-            for i in range(args.batch_size):
-                torch.save(dire[i], os.path.join(
-                    args.write_dir, f'{files[file_position+i]}_dire.pt'))
-                torch.save(latent_dire[i], os.path.join(
-                    args.write_dir, f'{files[file_position+i]}_latent_dire.pt'))
-            # update file position
-            file_position += args.batch_size
-            if len(files) - file_position < args.batch_size:
-                batch = torch.cat([model.img_to_tensor(
-                    img) for img in [os.path.join(args.read_dir, file) for file in files[file_position:]]])
-                with torch.no_grad():
-                    dire, latent_dire, _, _, _ = model(
-                        batch.to(device), n_steps=50)
+    logger.info("Loading model...")
+    if args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]:
+        model = LatentDIRE(
+            device,
+            pretrained_model_name=args.model_id,
+            use_fp16=(True if device == "cuda" else False),
+        )
+        transform = partial(model.img_to_tensor, size=512)
+    elif args.model_id in ["models/lsun_bedroom.pt", "models/256x256_diffusion_uncond.pt"]:
+        model = ADMDIRE(
+            device,
+            model_path=args.model_id,
+            use_fp16=(True if device == "cuda" else False),
+        )
+        transform = partial(model.img_to_tensor, size=256)
 
-                    # For testing locally
-                    # dire = torch.randn(args.batch_size, 3, 256, 256)
-                    # latent_dire = torch.randn(args.batch_size, 3, 64, 64)
+    scratch_dir = os.environ["TMPDIR"]
+    img_dir = f"{scratch_dir}/images/"
+    dataset = ImageFolder(img_dir, transform=transform)
+    dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
-                for i in range(len(files) - file_position):
-                    torch.save(dire[i], os.path.join(
-                        args.write_dir, f'{files[file_position+i]}_dire.pt'))
-                    torch.save(latent_dire[i], os.path.join(
-                        args.write_dir, f'{files[file_position+i]}_latent_dire.pt'))
-                break
+    for idx, (batch, _) in tqdm(enumerate(dataloader)):
+        batch = batch.squeeze(1).to(device)
+        if args.model_id in ["CompVis/stable-diffusion-v1.4", "runwayml/stable-diffusion-v1.5"]:
+            dire, latent_dire, *_ = model(batch, n_steps=args.ddim_steps)
+        else:
+            dire, _ = model(batch, n_steps=args.ddim_steps)
+
+        dire_path = os.path.join(args.write_dir_dire, f"{idx}_dire.pt")
+        torch.save(dire, dire_path)
+        latent_dire_path = os.path.join(args.write_dir_latent_dire, f"{idx}_latent_dire.pt")
+        torch.save(latent_dire, latent_dire_path)
+
+        if args.dev_run:
+            break
+
+        if idx % 100 == 0:
+            logger.info(f"Processed {idx} batches ({idx * args.batch_size} images)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--model_id', type=str, default="CompVis/stable-diffusion-v1-4",
-                        help="model to use for computing DIRE")
-    parser.add_argument('--batch_size', type=int, default=1,
-                        help="batch size for computing DIRE")
-    parser.add_argument('--read_dir', type=str,
-                        help="directory to read images from")
-    parser.add_argument('--write_dir', type=str,
-                        help="directory to write images to")
+    parser.add_argument("-d", "--dev-run", action="store_true", help="Whether to run a test run.")
+    parser.add_argument(
+        "--model_id", type=str, default="runwayml/stable-diffusion-v1-5", help="model to use for computing DIRE"
+    )
+    parser.add_argument("--ddim_steps", type=int, required=True, help="How many DDIM steps to take.")
+    parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
+    parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
+    parser.add_argument("--write_dir_latent_dire", type=str, help="directory to write latent dire to")
     args = parser.parse_args()
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Setup logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
     main(args, device)

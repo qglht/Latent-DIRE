@@ -1,5 +1,6 @@
 # local package
 -e .
+src/guided-diffusion
 
 # external requirements
 black
@@ -9,10 +10,12 @@ accelerate
 diffusers
 matplotlib
 numpy
+lightning
 lmdb
 scikit-learn
 torch>=2.0.0
 torchvision
 transformers
 tqdm
+wandb
 xformers
