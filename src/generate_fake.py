@@ -1,4 +1,5 @@
 from diffusers import StableDiffusionPipeline
+import torch
 import os
 import wandb
 import pickle
@@ -24,7 +25,7 @@ print("prompts loaded")
 
 # generate fake images from these prompts
 device = "cuda"
-pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", safety_checker=None)  # or other model
+pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", safety_checker=None, torch_dtype=torch.float16)  # or other model
 pipe = pipe.to(device)
 print("pipeline created")
 for prompt in prompts:
@@ -32,7 +33,7 @@ for prompt in prompts:
     if not os.path.exists(f"data/fake/{prompt}/"):
         os.makedirs(f"data/fake/{prompt}/")
     for batch in range(config["n_batches"]):
-        images_generated = pipe([prompt] * config["batch_size"]).images
+        images_generated = pipe([f'A photo of {prompt}'] * config["batch_size"]).images
         for i in range(config["batch_size"]):
             image = images_generated[i]
             image.save(f"data/fake/{prompt}/fake_{batch*config['batch_size'] + i}.jpg")
