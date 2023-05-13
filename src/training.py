@@ -33,7 +33,7 @@ class Classifier(pl.LightningModule):
         loss = self.loss(pred, label)
         acc = binary_accuracy(pred.argmax(axis=1), label)
         ap = binary_average_precision(pred[:, 1], label)
-        metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
+        metrics = {"train_loss": loss, "train_acc": acc, "train_ap": ap}
         self.log_dict(metrics)
 
         return loss
@@ -53,7 +53,7 @@ class Classifier(pl.LightningModule):
         loss = self.loss(pred, label)
         acc = binary_accuracy(pred.argmax(axis=1), label)
         ap = binary_average_precision(pred[:, 1], label)
-        metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
+        metrics = {"test_loss": loss, "test_acc": acc, "test_ap": ap}
         self.log_dict(metrics)
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
