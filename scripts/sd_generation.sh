@@ -1,4 +1,4 @@
-#!bin/bash
+#!/bin/bash
 
 #SBATCH --gpus=a100-pcie-40gb
 #SBATCH --gpus=1

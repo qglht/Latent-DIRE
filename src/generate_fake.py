@@ -37,4 +37,4 @@ if __name__ == "__main__":
             images_generated = pipe([f'A photo of {prompt}'] * config["batch_size"]).images
             for i in range(config["batch_size"]):
                 image = images_generated[i]
-                image.save(f"/cluster/scratch/lcolonn/sd_generated/fake_{batch*config['batch_size'] + i}.jpg")
+                image.save(f"/cluster/scratch/lcolonn/sd_generated/{prompt}_{batch*config['batch_size'] + i}.jpg")
