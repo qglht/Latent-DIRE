@@ -15,5 +15,5 @@ DATA="/cluster/scratch/$USER/data"
 tar cf $DATA.tar $DATA
 rsync -chavzP $DATA.tar $TMPDIR
 tar xf $TMPDIR/$DATA.tar -C $TMPDIR
-python src/training.py -d --data_dir "$TMPDIR/data" --batch_size 128 --max-epochs 1000                                                            
+python src/training.py -d --data_dir "$TMPDIR/data" --batch_size 128 --max_epochs 1000                                                            
                                                                                                                                                            
