@@ -2,7 +2,7 @@
 This script computes both the DIRE and latent DIRE representations for a folder of images.
 
 It assumes you have a folder of images you want to compute the representations for. The folder should be 
-structured as follows, where read_dir is the directory name you give to the argparser:
+structured as follows:
 
     read_dir
     ├──img1.JPEG
@@ -10,12 +10,12 @@ structured as follows, where read_dir is the directory name you give to the argp
     ├──img3.JPG
     :
 
-Before launching the script, compress the read_dir folder using 
+Before launching the script, compress your folder using 
 
-    tar czf compressed_name.tar.gz read_dir
+    tar cf compressed_name.tar read_dir
 
-and put it at /cluster/scratch/user/ where user is your ETH Kürzel. Finally, make sure you adapt the dire_generation.sh file. 
-You need to provide the path of your compressed folder. Write your path into the variable COMPRESSED_FOLDER_PATH.
+and put it at /cluster/scratch/user/ where user is your ETH Kürzel. Finally, make sure you adapt the dire_generation.sh slurm script. 
+You need to provide the path of your compressed folder in the variable COMPRESSED_FOLDER_PATH.
 """
 
 
