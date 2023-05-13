@@ -80,12 +80,12 @@ def main(args, device: torch.device):
 
         for i in range(args.batch_size):
             dire_path = os.path.join(args.write_dir_dire, f"{idx*args.batch_size + i}_dire.jpeg")
-            dire.save(dire_path)
+            dire[i].convert("RGB").save(dire_path)
             if args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]:
                 latent_dire_path = os.path.join(
                     args.write_dir_latent_dire, f"{idx*args.batch_size + i}_latent_dire.jpeg"
                 )
-                latent_dire.save(latent_dire_path)
+                latent_dire[i].convert("RGB").save(latent_dire_path)
 
         if args.dev_run:
             break
