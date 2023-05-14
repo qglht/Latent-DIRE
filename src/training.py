@@ -30,10 +30,10 @@ class Classifier(pl.LightningModule):
         dire, label = batch
         if np.random.rand() < 0.5:  # 50% chance for horizontal flip
             dire = hflip(dire)
-        pred = self.classifier(dire)
-        loss = self.loss(pred, label)
-        acc = binary_accuracy(pred.argmax(axis=1), label)
-        ap = binary_average_precision(pred[:, 1], label)
+        logit = self.classifier(dire)
+        loss = self.loss(logit, label)
+        acc = binary_accuracy(logit.argmax(axis=1), label)
+        ap = binary_average_precision(logit[:, 1], label)
         metrics = {"train_loss": loss, "train_acc": acc, "train_ap": ap}
         self.log_dict(metrics)
 
@@ -41,19 +41,19 @@ class Classifier(pl.LightningModule):
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred = self.classifier(dire)
-        loss = self.loss(pred, label)
-        acc = binary_accuracy(pred.argmax(axis=1), label)
-        ap = binary_average_precision(pred[:, 1], label)
+        logit = self.classifier(dire)
+        loss = self.loss(logit, label)
+        acc = binary_accuracy(logit.argmax(axis=1), label)
+        ap = binary_average_precision(logit[:, 1], label)
         metrics = {"val_loss": loss, "val_acc": acc, "val_ap": ap}
         self.log_dict(metrics)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         dire, label = batch
-        pred = self.classifier(dire)
-        loss = self.loss(pred, label)
-        acc = binary_accuracy(pred.argmax(axis=1), label)
-        ap = binary_average_precision(pred[:, 1], label)
+        logit = self.classifier(dire)
+        loss = self.loss(logit, label)
+        acc = binary_accuracy(logit.argmax(axis=1), label)
+        ap = binary_average_precision(logit[:, 1], label)
         metrics = {"test_loss": loss, "test_acc": acc, "test_ap": ap}
         self.log_dict(metrics)
 
@@ -70,7 +70,7 @@ class Classifier(pl.LightningModule):
 
 
 def main(args: argparse.Namespace) -> None:
-    torch.set_float32_matmul_precision("medium" | "high")
+    torch.set_float32_matmul_precision("medium")
     seed_everything(33914, workers=True)
 
     # Setup Weights & Biases
