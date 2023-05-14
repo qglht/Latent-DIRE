@@ -20,12 +20,20 @@ def preprocess_resnet50_pixel(img):
     batch = weights.transforms()(img)
     return batch
 
-
-def build_resnet50_latent(device: str = "cpu", pretrained: str = True) -> ResNet:
-    # FIXME
-    pass
-
+def build_resnet50_latent(device: str = 'cpu', pretrained: str = True, kernel_size: int=3) -> ResNet:
+    weights = ResNet50_Weights.DEFAULT
+    model = resnet50(weights=weights)
+    for param in model.parameters():
+        param.requires_grad = False
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=kernel_size, stride=1, padding=2, bias=False)
+    model.fc = nn.Sequential(
+        nn.Linear(2048, 128),
+        nn.ReLU(inplace=True),
+        nn.Linear(128, 2),
+        nn.Softmax(dim=1)
+    )
+    model.eval()
+    return model
 
 def preprocess_resnet50_latent(img):
-    # FIXME
-    pass
+    return img
