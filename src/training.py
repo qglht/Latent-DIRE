@@ -1,4 +1,5 @@
 import argparse
+import sys
 from typing import Tuple
 
 import numpy as np
@@ -63,16 +64,17 @@ class Classifier(pl.LightningModule):
         else:
             optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.learning_rate)
 
-        lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=2)
+        lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.2, patience=3)
 
         return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "val_acc"}
 
 
 def main(args: argparse.Namespace) -> None:
+    torch.set_float32_matmul_precision("medium" | "high")
     seed_everything(33914, workers=True)
 
     # Setup Weights & Biases
-    wandb_logger = WandbLogger(project="Training", entity="latent-dire", config=vars(args))
+    wandb_logger = WandbLogger(name=args.name, project="Training", entity="latent-dire", config=vars(args))
 
     # Load the data
     train_loader, val_loader, test_loader = get_dataloaders(
@@ -80,22 +82,24 @@ def main(args: argparse.Namespace) -> None:
     )
 
     # Setup callbacks
-    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
+    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=4, verbose=True)
     checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath="models/")
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
     clf = Classifier(args.model, args.optimizer, args.learning_rate)
     trainer = Trainer(
-        fast_dev_run=args.dev_run,  # uncomment to debug
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         devices="auto",  # use all available GPUs
         min_epochs=1,
         max_epochs=args.max_epochs,
         callbacks=[early_stop, checkpoint, lr_monitor],
+        val_check_interval=25,
         # deterministic=True,  # slower, but reproducable: https://lightning.ai/docs/pytorch/stable/common/trainer.html#reproducibility
         precision="16-mixed",
-        default_root_dir="models/",
+        default_root_dir=f"models/{args.name}",
         logger=wandb_logger,
+        log_every_n_steps=5,
+        fast_dev_run=args.dev_run,
     )
     trainer.fit(clf, train_loader, val_loader)
     trainer.test(clf, test_loader)
@@ -104,6 +108,14 @@ def main(args: argparse.Namespace) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--dev_run", action="store_true", help="Whether to run a test run.")
+    parser.add_argument(
+        "-n",
+        "--name",
+        type=str,
+        default=None,
+        required="-d" not in sys.argv and "--dev-run" not in sys.argv,
+        help="A descriptive name for the run, for wandb and checkpoint directory.",
+    )
     parser.add_argument("--model", type=str, default="resnet50_pixel")
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_epochs", type=int, default=100)
@@ -111,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("--learning_rate", type=float, default=0.005)
     parser.add_argument("--data_dir", type=str, default="data/data")
     parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for the data loader.")
-    parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
+    # parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     # parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
     args = parser.parse_args()
 
@@ -119,9 +131,9 @@ if __name__ == "__main__":
     assert args.model in ["resnet50_latent", "resnet50_pixel", "mlp", "cnn"]
     assert args.batch_size > 0
     assert args.max_epochs > 0
-    if args.latent:
-        assert args.model in ["mlp", "cnn", "resnet50_latent"]
-    else:
-        assert args.model == "resnet50_pixel"
+    # if args.latent:
+    #    assert args.model in ["mlp", "cnn", "resnet50_latent"]
+    # else:
+    #    assert args.model == "resnet50_pixel"
 
     main(args)
