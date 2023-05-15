@@ -19,5 +19,5 @@ tar xf $TMPDIR/images.tar -C $TMPDIR/images
 # you can check with lquota
 python scritps/generate_dire.py --ddim_steps 10 --batch_size 20 \
 --write_dir_dire "/cluster/home/$USER/Latent-DIRE/data/imagenet_dire" \
---write_dir_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_ldire"
+--write_dir_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_ldire" \
 --write_dir_decoded_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_decoded_ldire"
