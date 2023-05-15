@@ -91,7 +91,6 @@ def main(args, device: torch.device):
                 decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
                 decoded_ldire[i].save(decoded_ldire_path)
 
-
         if args.dev_run:
             break
 
@@ -109,7 +108,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
     parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
     parser.add_argument("--write_dir_ldire", type=str, help="directory to write latent dire to")
-    parser.add_argument("--write_dire_decoded_ldire", type=str, help="directory to write decoded latent dire to")"))
+    parser.add_argument("--write_dire_decoded_ldire", type=str, help="directory to write decoded latent dire to")
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
