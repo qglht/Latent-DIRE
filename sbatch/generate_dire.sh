@@ -8,7 +8,7 @@
 #SBATCH --gpus=1
 #SBATCH --gres=gpumem:32g
 
-COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/imagenet.tar"
+COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/sd_generated.tar.gz"
 
 module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
 pip install . src/guided-diffusion
@@ -18,6 +18,6 @@ tar xf $TMPDIR/images.tar -C $TMPDIR/images
 # make sure you have a few GB of space in your home directory as we save ldire as pt files there 
 # you can check with lquota
 python scripts/generate_dire.py --ddim_steps 10 --batch_size 20 \
---write_dir_dire "/cluster/home/$USER/Latent-DIRE/data/imagenet_dire" \
---write_dir_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_ldire" \
---write_dir_decoded_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_decoded_ldire"
+--write_dir_dire "/cluster/scratch/$USER/sd_generated_dire_10_steps_v2" \
+--write_dir_ldire "/cluster/scratch/$USER/sd_generated_ldire_10_steps_v2" \
+--write_dir_decoded_ldire "/cluster/scratch/$USER/sd_generated_decoded_ldire_10_steps_v2"
