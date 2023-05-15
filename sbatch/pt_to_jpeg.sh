@@ -10,4 +10,4 @@ module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
 pip install . src/guided-diffusion
 
 PT_BATCHES_PATH="/cluster/scratch/$USER/imagenet_dire"
-python src/pt_to_jpeg.py --read_dir $PT_BATCHES_PATH --write_dir "~/data/processed/imagenet_dire_jpeg"
+python scripts/pt_to_jpeg.py --read_dir $PT_BATCHES_PATH --write_dir "$HOME/data/processed/imagenet_dire_jpeg"

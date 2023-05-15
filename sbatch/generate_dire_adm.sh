@@ -5,8 +5,7 @@
 #SBATCH --tmp=20G
 #SBATCH --ntasks=2
 #SBATCH --mem-per-cpu=4G
-#SBATCH --gpus=1
-#SBATCH --gres=gpumem:32g
+#SBATCH --gpus=a100_80gb:1
 
 COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/dalle_2.tar.gz"
 

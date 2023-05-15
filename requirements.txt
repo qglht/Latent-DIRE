@@ -15,6 +15,7 @@ lmdb
 scikit-learn
 torch>=2.0.0
 torchvision
+torchmetrics
 transformers
 tqdm
 wandb

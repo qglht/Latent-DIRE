@@ -23,6 +23,7 @@ from argparse import ArgumentParser
 from functools import partial
 import logging
 import os
+from pathlib import Path
 
 import torch
 from torch.utils.data import DataLoader
@@ -40,12 +41,6 @@ def main(args, device: torch.device):
     """
     # wandb.init(project="compute-dire", entity="latent-dire")
     logger = logging.getLogger(__name__)
-
-    logger.info("Creating directories...")
-    if not os.path.exists(args.write_dir_dire):
-        os.makedirs(args.write_dir_dire)
-    if not os.path.exists(args.write_dir_latent_dire):
-        os.makedirs(args.write_dir_latent_dire)
 
     logger.info("Loading model...")
     latent = args.model_id in ["CompVis/stable-diffusion-v1-4", "runwayml/stable-diffusion-v1-5"]
@@ -69,31 +64,38 @@ def main(args, device: torch.device):
     dataset = ImageFolder(img_dir, transform=transform)
     dataloader = DataLoader(dataset, args.batch_size, shuffle=False)
 
+    # create directories if they don't exist
+    write_dir_dire = Path(args.write_dir_dire)
+    write_dir_ldire = Path(args.write_dir_ldire)
+    write_dir_decoded_ldire = Path(args.write_dir_decoded_ldire)
+    write_dir_dire.mkdir(parents=True, exist_ok=True)
+    write_dir_ldire.mkdir(parents=True, exist_ok=True)
+    write_dir_decoded_ldire.mkdir(parents=True, exist_ok=True)
+
     logger.info("Computing DIRE...")
-    for idx, (batch, _) in tqdm(enumerate(dataloader)):
+    for batch_idx, (batch, _) in tqdm(enumerate(dataloader)):
         batch = batch.squeeze(1).to(device)
         if latent:
-            dire, latent_dire, *_ = model(batch, n_steps=args.ddim_steps)
-            dire = model.tensor_to_pil(dire)
-            latent_dire = model.tensor_to_pil(latent_dire)
+            dire, ldire, *_ = model(batch, n_steps=args.ddim_steps)
+            decoded_ldire = model.decode(ldire)
         else:
             dire, _ = model(batch, n_steps=args.ddim_steps)
-            dire = model.tensor_to_pil(dire)
 
+        dire = model.tensor_to_pil(dire)
         for i in range(args.batch_size):
-            dire_path = os.path.join(args.write_dir_dire, f"{idx*args.batch_size + i}_dire.jpeg")
-            dire[i].convert("RGB").save(dire_path)
+            dire_path = write_dir_dire / f"{batch_idx*args.batch_size + i}_dire.jpeg"
+            dire[i].save(dire_path)
             if latent:
-                latent_dire_path = os.path.join(
-                    args.write_dir_latent_dire, f"{idx*args.batch_size + i}_latent_dire.jpeg"
-                )
-                latent_dire[i].convert("RGB").save(latent_dire_path)
+                ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.pt"
+                torch.save(ldire[i], ldire_path)
+                decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
+                decoded_ldire[i].save(decoded_ldire_path)
 
         if args.dev_run:
             break
 
-        if idx % 10 == 0:
-            logger.info(f"Processed {idx} batches ({idx * args.batch_size} images)")
+        if batch_idx % 10 == 0:
+            logger.info(f"Processed {batch_idx} batches ({batch_idx * args.batch_size} images)")
 
 
 if __name__ == "__main__":
@@ -105,7 +107,8 @@ if __name__ == "__main__":
     parser.add_argument("--ddim_steps", type=int, required=True, help="How many DDIM steps to take.")
     parser.add_argument("--batch_size", type=int, default=1, help="batch size for computing DIRE")
     parser.add_argument("--write_dir_dire", type=str, help="directory to write dire to")
-    parser.add_argument("--write_dir_latent_dire", type=str, help="directory to write latent dire to")
+    parser.add_argument("--write_dir_ldire", type=str, help="directory to write latent dire to")
+    parser.add_argument("--write_dir_decoded_ldire", type=str, help="directory to write decoded latent dire to")
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

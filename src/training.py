@@ -17,13 +17,14 @@ from lightning.pytorch.loggers import WandbLogger
 
 from src.data_loader import get_dataloaders
 from src.nn.model_collection import MODEL_DICT
+from nn.resnet50 import preprocess_resnet50_pixel, preprocess_resnet50_latent
 
 
 class Classifier(pl.LightningModule):
-    def __init__(self, model: str, optimizer: str, learning_rate: float) -> None:
+    def __init__(self, model: str, freeze_backbone: bool, optimizer: str, learning_rate: float) -> None:
         super().__init__()
         self.save_hyperparameters()
-        self.classifier = MODEL_DICT[model]()
+        self.classifier = MODEL_DICT[model](freeze_backbone=freeze_backbone)
         self.loss = nn.CrossEntropyLoss()
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> dict:
@@ -63,7 +64,6 @@ class Classifier(pl.LightningModule):
             optimizer = optimizer(self.classifier.fc.parameters(), lr=self.hparams.learning_rate)
         else:
             optimizer = optimizer(self.classifier.parameters(), lr=self.hparams.learning_rate)
-
         lr_scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.2, patience=3)
 
         return {"optimizer": optimizer, "lr_scheduler": lr_scheduler, "monitor": "val_acc"}
@@ -77,8 +77,12 @@ def main(args: argparse.Namespace) -> None:
     wandb_logger = WandbLogger(name=args.name, project="Training", entity="latent-dire", config=vars(args))
 
     # Load the data
+    if args.model in ["resnet50_latent"]:
+        transform = preprocess_resnet50_latent
+    elif args.model in ["resnet50_pixel"]:
+        transform = preprocess_resnet50_pixel
     train_loader, val_loader, test_loader = get_dataloaders(
-        args.data_dir, args.batch_size, num_workers=args.num_workers, shuffle=True
+        args.data_dir, transform, args.batch_size, num_workers=args.num_workers, shuffle=True
     )
 
     # Setup callbacks
@@ -86,7 +90,7 @@ def main(args: argparse.Namespace) -> None:
     checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath="models/")
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
-    clf = Classifier(args.model, args.optimizer, args.learning_rate)
+    clf = Classifier(args.model, args.freeze_backbone, args.optimizer, args.learning_rate)
     trainer = Trainer(
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
         devices="auto",  # use all available GPUs
@@ -117,6 +121,7 @@ if __name__ == "__main__":
         help="A descriptive name for the run, for wandb and checkpoint directory.",
     )
     parser.add_argument("--model", type=str, default="resnet50_pixel")
+    parser.add_argument("--freeze_backbone", type=bool, default=True)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
