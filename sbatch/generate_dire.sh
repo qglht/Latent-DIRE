@@ -17,7 +17,7 @@ mkdir -p $TMPDIR/images
 tar xf $TMPDIR/images.tar -C $TMPDIR/images 
 # make sure you have a few GB of space in your home directory as we save ldire as pt files there 
 # you can check with lquota
-python scritps/generate_dire.py --ddim_steps 10 --batch_size 20 \
+python scripts/generate_dire.py --ddim_steps 10 --batch_size 20 \
 --write_dir_dire "/cluster/home/$USER/Latent-DIRE/data/imagenet_dire" \
 --write_dir_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_ldire" \
 --write_dir_decoded_ldire "/cluster/home/$USER/Latent-DIRE/data/imagenet_decoded_ldire"
