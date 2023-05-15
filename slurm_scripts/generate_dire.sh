@@ -8,11 +8,12 @@
 #SBATCH --gpus=1
 #SBATCH --gres=gpumem:32g
 
-COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/imagenet.tar"
+COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/dalle_2.tar.gz"
 
 module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
+wandb login
 pip install . src/guided-diffusion
 rsync -chavzP $COMPRESSED_FOLDER_PATH $TMPDIR/images.tar
 mkdir -p $TMPDIR/images
 tar xf $TMPDIR/images.tar -C $TMPDIR/images 
-python src/generate_dire.py --ddim_steps 10 --batch_size 20 --write_dir_dire "/cluster/scratch/$USER/imagenet_dire" --write_dir_latent_dire "/cluster/scratch/$USER/imagenet_latent_dire"
+python scripts/generate_dire.py --ddim_steps 10 --batch_size 20 --write_dir_dire "/cluster/scratch/$USER/dalle_2_dire_10_steps" --write_dir_latent_dire "/cluster/scratch/$USER/dalle_2_latent_dire_10_steps"
