@@ -146,7 +146,6 @@ class LatentDIRE(nn.Module):
         if type(image) == str:
             image = Image.open(image)
         image = image.resize((size, size))
-        image = image.convert("RGB")
         t = pil_to_tensor(image)
         t = t.to(dtype=torch.float16 if use_fp16 else torch.float32)
         t = t / 127.5 - 1.0  # [0, 255] to [-1, 1]
@@ -160,9 +159,11 @@ class LatentDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
-        if image.dim == 3:
+        # ensure there is a batch dimension
+        if image.dim() == 3:
             image = image.unsqueeze(0)
 
+        # rescale to [0, 255]
         image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
         image = image.cpu().permute(0, 2, 3, 1).numpy()
 
@@ -302,7 +303,6 @@ class ADMDIRE(nn.Module):
         if type(image) == str:
             image = Image.open(image)
         image = image.resize((size, size))
-        image = image.convert("RGB")
         t = pil_to_tensor(image)
         t = t.to(dtype=torch.float16 if use_fp16 else torch.float32)
         t = t / 127.5 - 1.0  # [0, 255] to [-1, 1]
@@ -316,9 +316,11 @@ class ADMDIRE(nn.Module):
         adapted from
         https://github.com/huggingface/diffusers/blob/716286f19ddd9eb417113e064b538706884c8e73/src/diffusers/pipelines/pipeline_utils.py#L815
         """
+        # ensure there is a batch dimension
         if image.dim() == 3:
             image = image.unsqueeze(0)
 
+        # rescale to [0, 255]
         image = ((image + 1) * 127.5).clamp(0, 255).to(dtype=torch.uint8)  # [-1, 1] to [0, 255]
         image = image.cpu().permute(0, 2, 3, 1).numpy()
 
