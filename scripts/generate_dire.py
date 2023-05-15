@@ -89,7 +89,7 @@ def main(args, device: torch.device):
                 ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.pt"
                 torch.save(ldire[i], ldire_path)
                 decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
-                decoded_ldire[i].save(decoded_ldire_path)
+                torch.save(decoded_ldire[i], decoded_ldire_path)
 
         if args.dev_run:
             break
