@@ -38,7 +38,7 @@ def main(args, device: torch.device):
     """Open images from read_dir, compute DIRE, and save to write_dir.
     The number of images loaded in at a time is determined by batch_size.
     """
-    wandb.init(project="compute-dire", entity="latent-dire")
+    # wandb.init(project="compute-dire", entity="latent-dire")
     logger = logging.getLogger(__name__)
 
     logger.info("Creating directories...")

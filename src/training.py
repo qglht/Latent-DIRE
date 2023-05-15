@@ -82,7 +82,7 @@ def main(args: argparse.Namespace) -> None:
     )
 
     # Setup callbacks
-    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=4, verbose=True)
+    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=10, verbose=True)
     checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath="models/")
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
