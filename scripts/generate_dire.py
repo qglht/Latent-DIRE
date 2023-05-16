@@ -78,10 +78,11 @@ def main(args, device: torch.device):
         if latent:
             dire, ldire, *_ = model(batch, n_steps=args.ddim_steps)
             decoded_ldire = model.decode(ldire)
+            decoded_ldire = model.tensor_to_pil(decoded_ldire)
         else:
             dire, _ = model(batch, n_steps=args.ddim_steps)
-
         dire = model.tensor_to_pil(dire)
+
         for i in range(args.batch_size):
             dire_path = write_dir_dire / f"{batch_idx*args.batch_size + i}_dire.jpeg"
             dire[i].save(dire_path)
@@ -89,7 +90,7 @@ def main(args, device: torch.device):
                 ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.pt"
                 torch.save(ldire[i], ldire_path)
                 decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
-                torch.save(decoded_ldire[i], decoded_ldire_path)
+                decoded_ldire[i].save(decoded_ldire_path)
 
         if args.dev_run:
             break
