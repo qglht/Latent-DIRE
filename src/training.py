@@ -17,7 +17,6 @@ from lightning.pytorch.loggers import WandbLogger
 
 from src.data_loader import get_dataloaders
 from src.nn.model_collection import MODEL_DICT
-from nn.resnet50 import preprocess_resnet50_pixel, preprocess_resnet50_latent
 
 
 class Classifier(pl.LightningModule):
@@ -77,12 +76,13 @@ def main(args: argparse.Namespace) -> None:
     wandb_logger = WandbLogger(name=args.name, project="Training", entity="latent-dire", config=vars(args))
 
     # Load the data
-    if args.model in ["resnet50_latent"]:
-        transform = preprocess_resnet50_latent
-    elif args.model in ["resnet50_pixel"]:
-        transform = preprocess_resnet50_pixel
     train_loader, val_loader, test_loader = get_dataloaders(
-        args.data_dir, transform, args.batch_size, num_workers=args.num_workers, shuffle=True
+        args.data_dir,
+        args.model,
+        type=args.data_type,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        shuffle=True,
     )
 
     # Setup callbacks
@@ -120,13 +120,14 @@ if __name__ == "__main__":
         required="-d" not in sys.argv and "--dev-run" not in sys.argv,
         help="A descriptive name for the run, for wandb and checkpoint directory.",
     )
-    parser.add_argument("--model", type=str, default="resnet50_pixel")
-    parser.add_argument("--freeze_backbone", type=bool, default=True)
+    parser.add_argument("--model", type=str, required=True, choices=["resnet50_pixel", "resnet50_latent"])
+    parser.add_argument("--data_type", type=str, required=True, choices=["images", "latent"])
+    parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--freeze_backbone", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--optimizer", type=str, default="Adam", choices=["Adam", "SGD"], help="Optimizer to use")
     parser.add_argument("--learning_rate", type=float, default=0.005)
-    parser.add_argument("--data_dir", type=str, default="data/data")
     parser.add_argument("--num_workers", type=int, default=0, help="Number of workers for the data loader.")
     # parser.add_argument("--latent", type=bool, default=False, help="Whether to use Latent DIRE")
     # parser.add_argument("--use_early_stopping", type=int, default=1, help="Whether to use early stopping.")
