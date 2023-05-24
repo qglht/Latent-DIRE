@@ -25,6 +25,7 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
@@ -87,8 +88,8 @@ def main(args, device: torch.device):
             dire_path = write_dir_dire / f"{batch_idx*args.batch_size + i}_dire.jpeg"
             dire[i].save(dire_path)
             if latent:
-                ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.pt"
-                torch.save(ldire[i], ldire_path)
+                ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.npz"
+                np.savez(ldire_path, ldire[i].cpu().numpy())
                 decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
                 decoded_ldire[i].save(decoded_ldire_path)
 

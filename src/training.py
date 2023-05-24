@@ -82,12 +82,11 @@ def main(args: argparse.Namespace) -> None:
         type=args.data_type,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
-        shuffle=True,
     )
 
     # Setup callbacks
     early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=10, verbose=True)
-    checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath="models/")
+    checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath=f"models/{args.name}")
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
     clf = Classifier(args.model, args.freeze_backbone, args.optimizer, args.learning_rate)
@@ -100,7 +99,6 @@ def main(args: argparse.Namespace) -> None:
         val_check_interval=25,
         # deterministic=True,  # slower, but reproducable: https://lightning.ai/docs/pytorch/stable/common/trainer.html#reproducibility
         precision="16-mixed",
-        default_root_dir=f"models/{args.name}",
         logger=wandb_logger,
         log_every_n_steps=5,
         fast_dev_run=args.dev_run,
