@@ -89,7 +89,7 @@ def main(args, device: torch.device):
             dire[i].save(dire_path)
             if latent:
                 ldire_path = write_dir_ldire / f"{batch_idx*args.batch_size + i}_ldire.npz"
-                np.savez(ldire[i].cpu().numpy(), ldire_path)
+                np.savez(ldire_path, ldire[i].cpu().numpy())
                 decoded_ldire_path = write_dir_decoded_ldire / f"{batch_idx*args.batch_size + i}_decoded_ldire.jpeg"
                 decoded_ldire[i].save(decoded_ldire_path)
 
