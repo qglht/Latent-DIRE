@@ -67,11 +67,12 @@ def main(args, device: torch.device):
 
     # create directories if they don't exist
     write_dir_dire = Path(args.write_dir_dire)
-    write_dir_ldire = Path(args.write_dir_ldire)
-    write_dir_decoded_ldire = Path(args.write_dir_decoded_ldire)
     write_dir_dire.mkdir(parents=True, exist_ok=True)
-    write_dir_ldire.mkdir(parents=True, exist_ok=True)
-    write_dir_decoded_ldire.mkdir(parents=True, exist_ok=True)
+    if latent:
+        write_dir_ldire = Path(args.write_dir_ldire)
+        write_dir_decoded_ldire = Path(args.write_dir_decoded_ldire)
+        write_dir_ldire.mkdir(parents=True, exist_ok=True)
+        write_dir_decoded_ldire.mkdir(parents=True, exist_ok=True)
 
     logger.info("Computing DIRE...")
     for batch_idx, (batch, _) in tqdm(enumerate(dataloader)):
