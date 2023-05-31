@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Batch job for training the DIRE model on the cluster.
+# We train the pixel resnet model for four different datasets,
+# each differing in the number of ddim steps.
+
 #SBATCH --job-name=train_batch
 #SBATCH --time 12:00:00
 #SBATCH --tmp=20G
@@ -25,7 +29,7 @@ for dataset in "${datasets[@]}"; do
     tar xf $TMPDIR/dataset.tar -C $TMPDIR/dataset
 
     # Train the model
-    NAME="DIRE 10k resnet50_pixel"
+    NAME="DIRE 10k resnet50_pixel $dataset"
     MODEL="resnet50_pixel"
     DATA_TYPE="images" # images or latent
     DATA="$TMPDIR/dataset"
