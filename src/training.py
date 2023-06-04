@@ -10,10 +10,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics.functional.classification import binary_accuracy, binary_average_precision
 from torchvision.transforms.functional import hflip
 
-import lightning.pytorch as pl
-from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
-from lightning.pytorch import Trainer, seed_everything
-from lightning.pytorch.loggers import WandbLogger
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, LearningRateMonitor
+from pytorch_lightning import Trainer, seed_everything
+from pytorch_lightning.loggers import WandbLogger
 
 from src.data_loader import get_dataloaders
 from src.nn.model_collection import MODEL_DICT
@@ -77,15 +77,15 @@ def main(args: argparse.Namespace) -> None:
 
     # Load the data
     train_loader, val_loader, test_loader = get_dataloaders(
-        args.data_dir,
-        args.model,
+        root=args.data_dir,
+        model=args.model,
         type=args.data_type,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
     )
 
     # Setup callbacks
-    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=3, verbose=True)
+    early_stop = EarlyStopping(monitor="val_acc", mode="max", min_delta=0.0, patience=5, verbose=True)
     checkpoint = ModelCheckpoint(save_top_k=2, monitor="val_acc", mode="max", dirpath=f"models/{args.name}")
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
