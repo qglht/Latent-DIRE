@@ -30,7 +30,7 @@ python src/training.py \
 --model $MODEL \
 --data_type $DATA_TYPE \
 --data_dir $DATA \
---freeze_backbone 1\
+--freeze_backbone 1 \
 --batch_size 256 \
 --max_epochs 1000 \
 --num_workers 0 # if used, specify #SBATCH --cpus-per-task
