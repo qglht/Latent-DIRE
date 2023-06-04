@@ -61,8 +61,8 @@ def get_dataloaders(
     train_loader = DataLoader(
         train_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
     val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+        val_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
     test_loader = DataLoader(
-        test_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+        test_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=True)
 
     return train_loader, val_loader, test_loader
