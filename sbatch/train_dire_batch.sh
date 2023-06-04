@@ -16,7 +16,7 @@ module load gcc/8.2.0 python_gpu/3.10.4 eth_proxy
 pip install . src/guided-diffusion
 
 # Define the list of datasets
-datasets=("5_steps" "10_steps" "20_steps" "30_steps")
+datasets=("5_steps_split" "10_steps_split" "20_steps_split" "30_steps_split")
 
 # Loop over the datasets
 for dataset in "${datasets[@]}"; do
