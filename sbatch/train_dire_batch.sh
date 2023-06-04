@@ -22,7 +22,7 @@ datasets=("5_steps" "10_steps" "20_steps" "30_steps")
 for dataset in "${datasets[@]}"; do
     echo "Training model resnet50_pixel on dataset $dataset"
 
-    COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/training_data/dire/$dataset.tar"
+    COMPRESSED_FOLDER_PATH="/cluster/scratch/$USER/training_data/dire_split/$dataset.tar"
     # Rsync the dataset to the current directory
     rsync -chavzP $COMPRESSED_FOLDER_PATH $TMPDIR
     tar xf $TMPDIR/$dataset.tar -C $TMPDIR
