@@ -41,7 +41,7 @@ def get_dataloaders(
         transform = preprocess_resnet50_pixel
     
     # Determine folder structure
-    if set(os.listdir(root)) == set(["train", "val", "test"]):
+    if set({"train", "val", "test"}).issubset(os.listdir(root)):
         if type == "images":
             train_dataset = ImageFolder(f"{root}/train", transform=transform)
             val_dataset = ImageFolder(f"{root}/val", transform=transform)
