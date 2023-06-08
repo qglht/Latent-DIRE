@@ -25,14 +25,13 @@ def build_resnet50_latent(freeze_backbone: bool = True, kernel_size: int = 3) ->
     model = resnet50(weights=weights)
     for param in model.parameters():
         param.requires_grad = not freeze_backbone
-    model.conv1 = nn.Conv2d(3, 64, kernel_size=kernel_size, stride=1, padding=2, bias=False)
+    model.conv1 = nn.Conv2d(4, 64, kernel_size=kernel_size, stride=1, padding=2, bias=False)
     nn.init.kaiming_normal_(model.conv1.weight, mode="fan_out", nonlinearity="relu")
     model.fc = nn.Sequential(nn.Linear(2048, 128), nn.ReLU(inplace=True), nn.Linear(128, 2))
     return model
 
 
 def preprocess_resnet50_latent(img):
-    if not isinstance(img, torch.Tensor):
-        img = F.pil_to_tensor(img)
+    img = torch.from_numpy(img)
     img = F.convert_image_dtype(img, torch.float)
     return img
