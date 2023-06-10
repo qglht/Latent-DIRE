@@ -42,5 +42,5 @@ for dataset in "${datasets[@]}"; do
         --batch_size 250 \
 
         rm -rf $TMPDIR/dataset
-
+    done
 done
