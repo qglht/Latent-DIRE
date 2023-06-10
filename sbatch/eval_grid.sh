@@ -12,7 +12,7 @@ pip install . src/guided-diffusion
 
 # Define the grid of models and datasets
 datasets = ("5_steps_split" "10_steps_split" "20_steps_split" "30_steps_split")
-models = ("DIRE 10k resnet50_pixel 5_steps_split", "DIRE 10k resnet50_pixel 10_steps_split", "DIRE 10k resnet50_pixel 20_steps_split", "DIRE 10k resnet50_pixel 30_steps_split")
+models = ("DIRE 10k resnet50_pixel 5_steps_split" "DIRE 10k resnet50_pixel 10_steps_split" "DIRE 10k resnet50_pixel 20_steps_split" "DIRE 10k resnet50_pixel 30_steps_split")
 
 # Loop over the datasets
 for dataset in "${datasets[@]}"; do
