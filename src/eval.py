@@ -52,7 +52,6 @@ if __name__ == "__main__":
         help="A descriptive name for the run, for wandb.",
     )
     parser.add_argument("--type", type=str, required=True, choices=["images", "latent"])
-    parser.add_argument("--name", type=str, required=True, help="A descriptive name for the run, for wandb.")
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--model", type=str, required=True, choices=["resnet50_pixel", "resnet50_latent"])
     parser.add_argument("--ckpt", type=str, required=True)
