@@ -43,3 +43,4 @@ for dataset in "${datasets[@]}"; do
 
         rm -rf $TMPDIR/dataset
 
+done
