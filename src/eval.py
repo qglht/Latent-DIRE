@@ -4,8 +4,8 @@ import sys
 import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import DatasetFolder, ImageFolder
-from lightning.pytorch import Trainer
-from lightning.pytorch.loggers import WandbLogger
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import WandbLogger
 
 from src.data_loader import ldire_loader
 from src.nn.resnet50 import preprocess_resnet50_pixel, preprocess_resnet50_latent

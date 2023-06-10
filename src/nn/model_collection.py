@@ -1,6 +1,6 @@
-from nn.cnn import build_cnn
-from nn.mlp import build_mlp
-from nn.resnet50 import (
+from src.nn.cnn import build_cnn
+from src.nn.mlp import build_mlp
+from src.nn.resnet50 import (
     build_resnet50_latent,
     build_resnet50_pixel,
     preprocess_resnet50_latent,
