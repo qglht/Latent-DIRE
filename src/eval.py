@@ -7,7 +7,8 @@ from torchvision.datasets import DatasetFolder, ImageFolder
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import WandbLogger
 
-from src.nn.resnet50 import preprocess_resnet50_pixel, preprocess_resnet50_latent, ldire_loader
+from src.data_loader import ldire_loader
+from src.nn.resnet50 import preprocess_resnet50_pixel, preprocess_resnet50_latent
 from src.training import Classifier
 
 
@@ -23,7 +24,9 @@ def main(args: argparse.Namespace) -> None:
     if args.type == "images":
         dataset = ImageFolder(args.data_dir, transform=transform)
     elif args.type == "latent":
-        dataset = DatasetFolder(args.data_dir, loader=ldire_loader, extensions=(".pt",), transform=transform)
+        dataset = DatasetFolder(
+            args.data_dir, transform=transform, loader=ldire_loader, extensions=(".npz",), transform=transform
+        )
     test_loader = DataLoader(dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False)
 
     clf = Classifier.load_from_checkpoint(args.ckpt)
