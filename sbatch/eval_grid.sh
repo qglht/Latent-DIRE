@@ -13,7 +13,7 @@ pip install . src/guided-diffusion
 
 # Define the grid of models and datasets
 datasets=("5_steps_split" "10_steps_split" "20_steps_split" "30_steps_split")
-models=("DIRE 10k resnet50_pixel 5_steps_split" "DIRE 10k resnet50_pixel 10_steps_split" "DIRE 10k resnet50_pixel 20_steps_split" "DIRE 10k resnet50_pixel 30_steps_split")
+models=("resnet_50_pixel_5_steps" "resnet_50_pixel_10_steps" "resnet_50_pixel_20_steps" "resnet_50_pixel_30_steps")
 
 # Loop over the datasets
 for dataset in "${datasets[@]}"; do
@@ -28,11 +28,24 @@ for dataset in "${datasets[@]}"; do
 
         # Evaluate the model
         NAME="Eval $model on $dataset"
-        MODEL="resnet50_pixel"
         DATA_TYPE="images" # images or latent
         DATA="$TMPDIR/$dataset/test"
+        MODEL="resnet50_pixel"
+
         # Find the first checkpoint in the model folder
-        CKPT=$(find . -type f -name "epoch=*" | sort -n -t "=" -k 2 | head -n 1)
+        checkpoint_dir="/cluster/home/$USER/Latent-DIRE/models/dire/$model"
+        # Get the list of files in the directory
+        files=("$checkpoint_dir"/*)
+
+        # Check if there is only one file in the directory
+        if [ ${#files[@]} -eq 1 ]; then
+            # Return the path to the file
+            CKPT="${files[0]}"
+            echo "$CKPT"
+        else
+            # Handle the case where there are multiple files or no files
+            echo "Error: There is not exactly one file in the directory."
+        fi
         python src/eval.py \
         --name "$NAME" \
         --model $MODEL \
